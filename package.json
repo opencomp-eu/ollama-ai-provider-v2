@@ -57,8 +57,12 @@
     "ai": "^5.0.0 || ^6.0.0",
     "zod": "^4.0.16"
   },
+  "packageManager": "pnpm@9.15.4",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "msw"]
   },
   "publishConfig": {
     "access": "public"
