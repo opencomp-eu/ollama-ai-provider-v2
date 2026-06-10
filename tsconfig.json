@@ -3,6 +3,7 @@
   "include": ["."],
   "exclude": ["*/dist", "dist", "build", "node_modules"],
   "compilerOptions": {
+    "moduleResolution": "bundler",
     "types": ["vitest/globals"]
   }
 }
