@@ -7,8 +7,10 @@ import {
   createTestConfig,
   prepareErrorResponse,
   prepareJsonResponse,
+  prepareStreamChunks,
   prepareStreamResponse,
 } from './test-helpers/ollama-test-helpers';
+import { convertReadableStreamToArray } from '../test-utils/test-server';
 
 describe('OllamaResponsesLanguageModel', () => {
   const testConfig = createTestConfig();
@@ -236,6 +238,92 @@ describe('OllamaResponsesLanguageModel', () => {
         });
 
         expect(result.stream).toBeDefined();
+      });
+
+      it('should emit final text delta before closing the text stream', async () => {
+        prepareStreamChunks(server, [
+          {
+            model: TEST_MODEL_ID,
+            created_at: '2024-01-01T00:00:00.000Z',
+            done: false,
+            message: {
+              role: 'assistant',
+              content: 'Hello',
+            },
+          },
+          {
+            model: TEST_MODEL_ID,
+            created_at: '2024-01-01T00:00:00.000Z',
+            done: true,
+            done_reason: 'stop',
+            message: {
+              role: 'assistant',
+              content: '!',
+            },
+            prompt_eval_count: 3,
+            eval_count: 2,
+          },
+        ]);
+
+        const result = await model.doStream({
+          prompt: TEST_PROMPT,
+        });
+        const parts = await convertReadableStreamToArray(result.stream);
+
+        expect(parts.map((part) => part.type)).toEqual([
+          'response-metadata',
+          'text-start',
+          'text-delta',
+          'text-delta',
+          'text-end',
+          'finish',
+        ]);
+        expect(parts.filter((part) => part.type === 'text-delta')).toEqual([
+          expect.objectContaining({ delta: 'Hello' }),
+          expect.objectContaining({ delta: '!' }),
+        ]);
+      });
+
+      it('should not emit empty text deltas for final done chunks', async () => {
+        prepareStreamChunks(server, [
+          {
+            model: TEST_MODEL_ID,
+            created_at: '2024-01-01T00:00:00.000Z',
+            done: false,
+            message: {
+              role: 'assistant',
+              content: 'Hello',
+            },
+          },
+          {
+            model: TEST_MODEL_ID,
+            created_at: '2024-01-01T00:00:00.000Z',
+            done: true,
+            done_reason: 'stop',
+            message: {
+              role: 'assistant',
+              content: '',
+            },
+            prompt_eval_count: 3,
+            eval_count: 1,
+          },
+        ]);
+
+        const result = await model.doStream({
+          prompt: TEST_PROMPT,
+        });
+        const parts = await convertReadableStreamToArray(result.stream);
+
+        expect(parts.filter((part) => part.type === 'text-delta')).toEqual([
+          expect.objectContaining({ delta: 'Hello' }),
+        ]);
+        expect(parts.map((part) => part.type)).toEqual([
+          'response-metadata',
+          'text-start',
+          'text-delta',
+          'text-end',
+          'finish',
+        ]);
       });
     });
   });
