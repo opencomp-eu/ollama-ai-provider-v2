@@ -117,4 +117,14 @@ export const prepareStreamResponse = (
       eval_count: 5,
     },
   };
-}; 
+};
+
+export const prepareStreamChunks = (
+  server: ReturnType<typeof createMockServer>,
+  chunks: Array<Record<string, unknown>>,
+) => {
+  server.urls['http://127.0.0.1:11434/api/chat'].response = {
+    type: 'stream-chunks',
+    chunks: chunks.map((chunk) => `${JSON.stringify(chunk)}\n`),
+  };
+};

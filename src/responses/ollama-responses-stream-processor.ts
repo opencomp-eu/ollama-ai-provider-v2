@@ -127,13 +127,13 @@ export class OllamaStreamProcessor {
       });
     }
 
-    if (value.done) {
-      this.handleDoneChunk(value, controller);
-    }
-
     const delta = value?.message;
     if (delta) {
       this.processDelta(delta, controller);
+    }
+
+    if (value.done) {
+      this.handleDoneChunk(value, controller);
     }
   }
 
@@ -180,7 +180,7 @@ export class OllamaStreamProcessor {
     delta: OllamaResponse["message"],
     controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
   ) {
-    if (delta?.content != null) {
+    if (delta?.content) {
       if (!this.state.hasTextStarted) {
         controller.enqueue({ type: "text-start", id: this.state.textId });
         this.state.hasTextStarted = true;
