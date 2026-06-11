@@ -1,4 +1,4 @@
-import { SharedV3Warning } from "@ai-sdk/provider";
+import { LanguageModelV2Prompt, SharedV3Warning } from "@ai-sdk/provider";
 import { parseProviderOptions } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaChatMessages } from "../adaptors/convert-to-ollama-chat-messages";
@@ -8,6 +8,8 @@ import {
 } from "../ollama-chat-settings";
 import { convertToOllamaResponsesMessages } from "./convert-to-ollama-responses-messages";
 import { prepareResponsesTools } from "./ollama-responses-prepare-tools";
+import { OllamaResponsesPrompt } from "./ollama-responses-api-types";
+import { OllamaChatPrompt } from "../adaptors/ollama-chat-prompt";
 
 export type OllamaResponsesProviderOptions = z.infer<
   typeof ollamaProviderOptions
@@ -23,8 +25,8 @@ interface RequestBuilderOptions {
   presencePenalty?: number;
   frequencyPenalty?: number;
   seed?: number;
-  prompt: any;
-  providerOptions?: any;
+  prompt: LanguageModelV2Prompt;
+  providerOptions?: Record<string, unknown> | undefined;
   tools?: any;
   toolChoice?: any;
   responseFormat?: any;
@@ -33,7 +35,7 @@ interface RequestBuilderOptions {
 interface RequestBuilderResult {
   args: {
     model: OllamaChatModelId;
-    messages: any;
+    messages: OllamaChatPrompt;
     temperature?: number;
     top_p?: number;
     max_output_tokens?: number;
