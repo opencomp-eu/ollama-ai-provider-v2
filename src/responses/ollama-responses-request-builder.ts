@@ -1,4 +1,4 @@
-import { LanguageModelV2Prompt, SharedV3Warning } from "@ai-sdk/provider";
+import { SharedV3Warning } from "@ai-sdk/provider";
 import { parseProviderOptions } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaChatMessages } from "../adaptors/convert-to-ollama-chat-messages";
@@ -25,7 +25,7 @@ interface RequestBuilderOptions {
   presencePenalty?: number;
   frequencyPenalty?: number;
   seed?: number;
-  prompt: LanguageModelV2Prompt;
+  prompt: any;
   providerOptions?: Record<string, unknown> | undefined;
   tools?: any;
   toolChoice?: any;
