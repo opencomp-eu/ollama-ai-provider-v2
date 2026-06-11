@@ -35,11 +35,13 @@ type UrlConfigWithCalls = UrlConfig & {
 
 type TestServerConfig = Record<string, UrlConfig>;
 
-export function createTestServer(config: TestServerConfig): {
+export type TestServer = {
   urls: Record<string, UrlConfigWithCalls>;
   server: SetupServerApi;
   calls: CallRecord[];
-} {
+}
+
+export function createTestServer(config: TestServerConfig): TestServer {
   const urls: Record<string, UrlConfigWithCalls> = {};
   const calls: CallRecord[] = [];
 

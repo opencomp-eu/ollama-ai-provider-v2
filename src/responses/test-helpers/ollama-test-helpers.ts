@@ -42,7 +42,7 @@ export const createTestConfig = (): OllamaConfig => ({
   generateId: () => "mock-id-1",
 });
 
-export const createMockServer: any = () =>
+export const createMockServer = () =>
   createTestServer({
     "http://127.0.0.1:11434/api/chat": {},
   });
@@ -51,7 +51,7 @@ export interface MockResponseOptions {
   content?: string;
   toolCalls?: Array<{
     id?: string;
-    function: { name: string; arguments: Record<string, any> };
+    function: { name: string; arguments: object };
   }>;
   usage?: { prompt_eval_count?: number; eval_count?: number };
   headers?: Record<string, string>;

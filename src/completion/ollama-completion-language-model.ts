@@ -242,7 +242,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
     const { prompt: rawPrompt, ...rawSettings } = args;
 
     let finishReason = "other";
-    let usage: LanguageModelV3Usage = {
+    const usage: LanguageModelV3Usage = {
       inputTokens: {
         total: undefined,
         noCache: undefined,

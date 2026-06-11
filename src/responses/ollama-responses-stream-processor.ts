@@ -1,8 +1,10 @@
 import {
   InvalidResponseDataError,
+  LanguageModelV3CallOptions,
   LanguageModelV3FinishReason,
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
+  SharedV3Warning,
 } from "@ai-sdk/provider";
 import { generateId, ParseResult } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
@@ -41,8 +43,8 @@ export class OllamaStreamProcessor {
   }
 
   createTransformStream(
-    warnings: any[],
-    options: any,
+    warnings: SharedV3Warning[],
+    options: LanguageModelV3CallOptions,
   ): TransformStream<
     ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
     LanguageModelV3StreamPart
@@ -93,10 +95,10 @@ export class OllamaStreamProcessor {
   private processChunk(
     chunk: ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
     controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
-    options: any,
+    options: LanguageModelV3CallOptions,
   ) {
-    if ((options as any)?.includeRawChunks) {
-      controller.enqueue({ type: "raw", rawValue: (chunk as any).rawValue });
+    if (options?.includeRawChunks) {
+      controller.enqueue({ type: "raw", rawValue: chunk.rawValue });
     }
 
     const values = extractOllamaResponseObjectsFromChunk(chunk);
@@ -120,12 +122,12 @@ export class OllamaStreamProcessor {
   ) {
     // Handle error-like chunks
     if (
-      (value as any) &&
-      typeof (value as any) === "object" &&
-      "error" in (value as any)
+      value &&
+      typeof value === "object" &&
+      "error" in value
     ) {
       this.state.finishReason = { unified: "error", raw: undefined };
-      controller.enqueue({ type: "error", error: (value as any).error });
+      controller.enqueue({ type: "error", error: value.error });
       return;
     }
 
@@ -133,7 +135,7 @@ export class OllamaStreamProcessor {
       this.state.isFirstChunk = false;
       controller.enqueue({
         type: "response-metadata",
-        ...getResponseMetadata(value as any),
+        ...getResponseMetadata(value),
       });
     }
 
