@@ -1,3 +1,4 @@
+import { convertReadableStreamToArray } from "../test-utils/test-server";
 import { OllamaResponsesLanguageModel } from "./ollama-responses-language-model";
 import {
   TEST_MODEL_ID,
@@ -7,7 +8,9 @@ import {
   createTestConfig,
   prepareErrorResponse,
   prepareJsonResponse,
+  prepareReasoningStreamResponse,
   prepareStreamResponse,
+  prepareToolCallStreamResponse,
 } from "./test-helpers/ollama-test-helpers";
 
 describe("OllamaResponsesLanguageModel", () => {
@@ -221,29 +224,149 @@ describe("OllamaResponsesLanguageModel", () => {
   });
 
   describe("doStream", () => {
-    describe("Basic Streaming", () => {
-      it("should handle basic streaming", async () => {
-        prepareStreamResponse(server);
+    it("should stream text parts", async () => {
+      prepareStreamResponse(server);
 
-        const result = await model.doStream({
-          prompt: TEST_PROMPT,
-        });
-
-        expect(result.response?.headers).toBeDefined();
-        expect(result.request?.body).toBeDefined();
-        expect(result.stream).toBeDefined();
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
       });
 
-      it("should handle stream with warnings", async () => {
-        prepareStreamResponse(server);
+      const parts = await convertReadableStreamToArray(result.stream);
 
-        const result = await model.doStream({
-          prompt: TEST_PROMPT,
-          topK: 50, // unsupported setting
-        });
-
-        expect(result.stream).toBeDefined();
+      expect(parts[0]).toMatchObject({
+        type: "response-metadata",
+        modelId: TEST_MODEL_ID,
+        timestamp: new Date("2024-01-01T00:00:00.000Z"),
       });
+      expect(parts).toEqual(
+        expect.arrayContaining([
+          { type: "text-start", id: expect.any(String) },
+          { type: "text-delta", id: expect.any(String), delta: "Hello" },
+          { type: "text-delta", id: expect.any(String), delta: " world" },
+          { type: "text-end", id: expect.any(String) },
+          {
+            type: "finish",
+            finishReason: { raw: "stop", unified: "stop" },
+            usage: {
+              inputTokens: {
+                total: 10,
+                noCache: undefined,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: 5,
+                text: undefined,
+                reasoning: undefined,
+              },
+            },
+            providerMetadata: { ollama: { responseId: null } },
+          },
+        ]),
+      );
+      expect(result.response?.headers).toBeDefined();
+      expect(result.request?.body).toBeDefined();
+    });
+
+    it("should stream reasoning parts", async () => {
+      prepareReasoningStreamResponse(server);
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+
+      expect(parts).toEqual(
+        expect.arrayContaining([
+          { type: "reasoning-start", id: expect.any(String) },
+          {
+            type: "reasoning-delta",
+            id: expect.any(String),
+            delta: "Let me think",
+          },
+          {
+            type: "reasoning-delta",
+            id: expect.any(String),
+            delta: " about this",
+          },
+          { type: "reasoning-end", id: expect.any(String) },
+          { type: "text-start", id: expect.any(String) },
+          {
+            type: "text-delta",
+            id: expect.any(String),
+            delta: "The answer is 42",
+          },
+          { type: "text-end", id: expect.any(String) },
+        ]),
+      );
+    });
+
+    it("should stream tool call parts", async () => {
+      prepareToolCallStreamResponse(server);
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+        tools: TEST_TOOLS,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+
+      expect(parts).toEqual(
+        expect.arrayContaining([
+          {
+            type: "tool-input-start",
+            id: "call_1",
+            toolName: "weather",
+          },
+          {
+            type: "tool-input-delta",
+            id: "call_1",
+            delta: '{"location":"SF"}',
+          },
+          { type: "tool-input-end", id: "call_1" },
+          {
+            type: "tool-call",
+            toolCallId: "call_1",
+            toolName: "weather",
+            input: '{"location":"SF"}',
+          },
+          {
+            type: "finish",
+            finishReason: { raw: "tool_calls", unified: "tool-calls" },
+            usage: expect.any(Object),
+            providerMetadata: expect.any(Object),
+          },
+        ]),
+      );
+    });
+
+    it("should include raw chunks when requested", async () => {
+      prepareStreamResponse(server);
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+        includeRawChunks: true,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+
+      expect(parts.some((part) => part.type === "raw")).toBe(true);
+    });
+
+    it("should return warnings for unsupported settings", async () => {
+      prepareStreamResponse(server);
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+        topK: 50,
+        seed: 123,
+      });
+
+      expect(result.warnings).toEqual([
+        { type: "unsupported", feature: "setting", details: "topK" },
+        { type: "unsupported", feature: "setting", details: "seed" },
+      ]);
     });
   });
 });

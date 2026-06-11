@@ -337,6 +337,7 @@ const baseOllamaResponseSchema = z.object({
   response: z.string(),
   done: z.boolean(),
   context: z.array(z.number()),
+  error: z.unknown().optional(),
 
   eval_count: z.number().optional(),
   eval_duration: z.number().optional(),

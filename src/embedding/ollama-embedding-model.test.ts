@@ -1,4 +1,7 @@
-import { EmbeddingModelV3Embedding } from "@ai-sdk/provider";
+import {
+  EmbeddingModelV3Embedding,
+  TooManyEmbeddingValuesForCallError,
+} from "@ai-sdk/provider";
 import { createTestServer } from "../test-utils/test-server";
 import { createOllama } from "../ollama-provider";
 
@@ -147,5 +150,27 @@ describe("doEmbed", () => {
       "custom-provider-header": "provider-header-value",
       "custom-request-header": "request-header-value",
     });
+  });
+
+  it("should handle API errors", async () => {
+    server.urls["http://127.0.0.1:11434/api/embed"].response = {
+      type: "error",
+      status: 500,
+      body: { error: { message: "embedding failed" } },
+    };
+
+    await expect(model.doEmbed({ values: testValues })).rejects.toThrow();
+  });
+
+  it("should throw when values exceed maxEmbeddingsPerCall", async () => {
+    const limitedModel = createOllama().embedding("dummy-embedding-model", {
+      maxEmbeddingsPerCall: 1,
+    });
+
+    await expect(
+      limitedModel.doEmbed({ values: testValues }),
+    ).rejects.toThrow(TooManyEmbeddingValuesForCallError);
+
+    expect(server.calls).toHaveLength(0);
   });
 });
