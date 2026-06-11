@@ -1,5 +1,6 @@
+import { APICallError } from "@ai-sdk/provider";
 import { safeParseJSON } from "@ai-sdk/provider-utils";
-import { ollamaErrorDataSchema } from "./ollama-error";
+import { ollamaErrorDataSchema, ollamaFailedResponseHandler } from "./ollama-error";
 
 describe("ollamaErrorDataSchema", () => {
   it("should parse OpenRouter resource exhausted error", async () => {
@@ -29,5 +30,29 @@ describe("ollamaErrorDataSchema", () => {
         },
       },
     });
+  });
+});
+
+describe("ollamaFailedResponseHandler", () => {
+  it("should create APICallError from Ollama error response", async () => {
+    const response = new Response(
+      JSON.stringify({
+        error: {
+          message: "model not found",
+          code: 404,
+        },
+      }),
+      { status: 404 },
+    );
+
+    const { value: error } = await ollamaFailedResponseHandler({
+      response,
+      url: "http://127.0.0.1:11434/api/chat",
+      requestBodyValues: {},
+    });
+
+    expect(error).toBeInstanceOf(APICallError);
+    expect(error.message).toBe("model not found");
+    expect(error.statusCode).toBe(404);
   });
 });

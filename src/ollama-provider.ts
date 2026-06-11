@@ -152,7 +152,7 @@ export function createOllama(
       fetch: options.fetch,
     });
 
-  const createLanguageModel = (modelId: OllamaChatModelId) => {
+  function createLanguageModel(modelId: OllamaChatModelId) {
     if (new.target) {
       throw new Error(
         "The Ollama model function cannot be called with the new keyword.",
@@ -160,7 +160,7 @@ export function createOllama(
     }
 
     return createResponsesModel(modelId);
-  };
+  }
 
   const createResponsesModel = (modelId: OllamaChatModelId) => {
     return new OllamaResponsesLanguageModel(modelId, {
@@ -172,6 +172,12 @@ export function createOllama(
   };
 
   const provider = function (modelId: OllamaChatModelId) {
+    if (new.target) {
+      throw new Error(
+        "The Ollama model function cannot be called with the new keyword.",
+      );
+    }
+
     return createLanguageModel(modelId);
   };
 

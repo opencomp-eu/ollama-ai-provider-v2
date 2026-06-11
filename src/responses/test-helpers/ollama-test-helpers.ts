@@ -99,22 +99,48 @@ export const prepareErrorResponse = (
   };
 };
 
+export interface StreamResponseOptions {
+  chunks?: string[];
+  headers?: Record<string, string>;
+}
+
 export const prepareStreamResponse = (
   server: ReturnType<typeof createMockServer>,
-  content: string = "Hello",
+  options: StreamResponseOptions = {},
 ) => {
+  const {
+    chunks = [
+      `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"message":{"role":"assistant","content":"Hello"}}`,
+      `\n{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":true,"done_reason":"stop","message":{"role":"assistant","content":" world"},"eval_count":5,"prompt_eval_count":10}`,
+    ],
+    headers,
+  } = options;
+
   server.urls["http://127.0.0.1:11434/api/chat"].response = {
-    type: "json-value",
-    body: {
-      model: TEST_MODEL_ID,
-      created_at: "2024-01-01T00:00:00.000Z",
-      done: true,
-      done_reason: "stop",
-      message: {
-        role: "assistant",
-        content,
-      },
-      eval_count: 5,
-    },
+    type: "stream-chunks",
+    headers,
+    chunks,
   };
+};
+
+export const prepareReasoningStreamResponse = (
+  server: ReturnType<typeof createMockServer>,
+) => {
+  prepareStreamResponse(server, {
+    chunks: [
+      `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"message":{"role":"assistant","content":"","thinking":"Let me think"}}`,
+      `\n{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":true,"done_reason":"stop","message":{"role":"assistant","content":"The answer is 42","thinking":" about this"},"eval_count":8,"prompt_eval_count":12}`,
+    ],
+  });
+};
+
+export const prepareToolCallStreamResponse = (
+  server: ReturnType<typeof createMockServer>,
+) => {
+  prepareStreamResponse(server, {
+    chunks: [
+      `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"weather","arguments":{"location":"SF"}},"id":"call_1"}]}}`,
+      `\n{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":true,"done_reason":"stop","message":{"role":"assistant","content":""},"eval_count":3,"prompt_eval_count":7}`,
+    ],
+  });
 };
