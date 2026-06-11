@@ -98,7 +98,11 @@ describe("createNdjsonStreamResponseHandler", () => {
     }
 
     expect(results).toHaveLength(1);
-    expect(results[0].value).toEqual({ value: "ok" });
+    expect(results[0]).toEqual({
+      success: true,
+      value: { value: "ok" },
+      rawValue: { value: "ok" },
+    });
     expect(warnSpy).toHaveBeenCalled();
 
     warnSpy.mockRestore();

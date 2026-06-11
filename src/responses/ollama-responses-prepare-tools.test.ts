@@ -1,12 +1,12 @@
-import { UnsupportedFunctionalityError } from "@ai-sdk/provider";
+import { LanguageModelV2FunctionTool } from "@ai-sdk/provider";
 import { prepareResponsesTools } from "./ollama-responses-prepare-tools";
 
-const functionTool = {
-  type: "function" as const,
+const functionTool: LanguageModelV2FunctionTool = {
+  type: "function",
   name: "weather",
   description: "Get weather",
   inputSchema: {
-    type: "object" as const,
+    type: "object",
     properties: { location: { type: "string" } },
     required: ["location"],
     additionalProperties: false,
@@ -47,7 +47,7 @@ describe("prepareResponsesTools", () => {
       tools: [
         {
           type: "provider-defined",
-          id: "web_search",
+          id: "provider.web_search",
           name: "web_search",
           args: {},
         },
