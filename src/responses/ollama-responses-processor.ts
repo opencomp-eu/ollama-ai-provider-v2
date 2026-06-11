@@ -52,11 +52,12 @@ export class OllamaResponseProcessor {
     providerMetadata: SharedV3ProviderMetadata;
   } {
     const content = this.extractContent(response);
-    const hasToolCalls = content.some(item => item.type === "tool-call");
+    const hasToolCalls = content.some((item) => item.type === "tool-call");
     const rawFinishReason = mapOllamaFinishReason(response.done_reason);
-    const finishReason: LanguageModelV3FinishReason = hasToolCalls && rawFinishReason.unified !== "tool-calls"
-      ? { unified: "tool-calls", raw: "tool_calls" }
-      : rawFinishReason;
+    const finishReason: LanguageModelV3FinishReason =
+      hasToolCalls && rawFinishReason.unified !== "tool-calls"
+        ? { unified: "tool-calls", raw: "tool_calls" }
+        : rawFinishReason;
     const usage = this.extractUsage(response);
     const providerMetadata: SharedV3ProviderMetadata = { ollama: {} };
 
@@ -93,7 +94,7 @@ export class OllamaResponseProcessor {
     for (const toolCall of response.message.tool_calls ?? []) {
       content.push({
         type: "tool-call" as const,
-        toolCallId: toolCall.id ?? (this.config.generateId?.() ?? generateId()),
+        toolCallId: toolCall.id ?? this.config.generateId?.() ?? generateId(),
         toolName: toolCall.function.name,
         input: JSON.stringify(toolCall.function.arguments),
       });
@@ -153,4 +154,4 @@ export function extractOllamaResponseObjectsFromChunk(
   }
 
   return results;
-} 
+}

@@ -40,6 +40,7 @@
     "ai": "^6.0.198",
     "eslint": "^10.4.1",
     "msw": "^2.12.14",
+    "prettier": "3.8.4",
     "tsup": "^8",
     "typescript": "6.0.3",
     "vite": "^8.0.16",
@@ -55,7 +56,10 @@
     "node": ">=20"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "msw"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msw"
+    ]
   },
   "publishConfig": {
     "access": "public"

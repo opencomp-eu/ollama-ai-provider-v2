@@ -1,7 +1,7 @@
 import {
   LanguageModelV2CallOptions,
   SharedV3Warning,
-  UnsupportedFunctionalityError
+  UnsupportedFunctionalityError,
 } from "@ai-sdk/provider";
 import { OllamaResponsesTool } from "./ollama-responses-api-types";
 
@@ -21,7 +21,6 @@ export function prepareResponsesTools({
     | { type: "function"; name: string };
   toolWarnings: SharedV3Warning[];
 } {
-
   // when the tools array is empty, change it to undefined to prevent errors:
   tools = tools?.length ? tools : undefined;
 
@@ -38,14 +37,13 @@ export function prepareResponsesTools({
       case "function": {
         // Ensure parameters is always a non-null object (even if empty)
         let parameters = tool.inputSchema;
-        if(!parameters){
+        if (!parameters) {
           parameters = {
             type: "object",
             properties: {},
             required: [],
           };
-        }
-        else if (
+        } else if (
           parameters &&
           typeof parameters === "object" &&
           parameters.type === "object" &&
@@ -58,8 +56,8 @@ export function prepareResponsesTools({
             properties: {},
             required: [],
           };
-        } 
-        
+        }
+
         ollamaTools.push({
           type: "function",
           function: {
@@ -71,7 +69,11 @@ export function prepareResponsesTools({
         break;
       }
       default:
-        toolWarnings.push({ type: "unsupported", feature: "tool", details: tool.name });
+        toolWarnings.push({
+          type: "unsupported",
+          feature: "tool",
+          details: tool.name,
+        });
         break;
     }
   }

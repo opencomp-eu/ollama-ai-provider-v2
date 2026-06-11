@@ -1,4 +1,4 @@
-import { OllamaResponsesLanguageModel } from './ollama-responses-language-model';
+import { OllamaResponsesLanguageModel } from "./ollama-responses-language-model";
 import {
   TEST_MODEL_ID,
   TEST_PROMPT,
@@ -8,34 +8,34 @@ import {
   prepareErrorResponse,
   prepareJsonResponse,
   prepareStreamResponse,
-} from './test-helpers/ollama-test-helpers';
+} from "./test-helpers/ollama-test-helpers";
 
-describe('OllamaResponsesLanguageModel', () => {
+describe("OllamaResponsesLanguageModel", () => {
   const testConfig = createTestConfig();
   const model = new OllamaResponsesLanguageModel(TEST_MODEL_ID, testConfig);
   const server = createMockServer();
 
-  describe('Model Properties', () => {
-    it('should have correct specification version', () => {
-      expect(model.specificationVersion).toBe('v3');
+  describe("Model Properties", () => {
+    it("should have correct specification version", () => {
+      expect(model.specificationVersion).toBe("v3");
     });
 
-    it('should have correct model ID', () => {
+    it("should have correct model ID", () => {
       expect(model.modelId).toBe(TEST_MODEL_ID);
     });
 
-    it('should have correct provider', () => {
-      expect(model.provider).toBe('ollama.responses');
+    it("should have correct provider", () => {
+      expect(model.provider).toBe("ollama.responses");
     });
 
-    it('should support image URLs', () => {
-      expect(model.supportedUrls['image/*']).toEqual([/^https?:\/\/.*$/]);
+    it("should support image URLs", () => {
+      expect(model.supportedUrls["image/*"]).toEqual([/^https?:\/\/.*$/]);
     });
   });
 
-  describe('doGenerate', () => {
-    describe('Basic Generation', () => {
-      it('should generate text response', async () => {
+  describe("doGenerate", () => {
+    describe("Basic Generation", () => {
+      it("should generate text response", async () => {
         prepareJsonResponse(server);
 
         const result = await model.doGenerate({
@@ -45,10 +45,9 @@ describe('OllamaResponsesLanguageModel', () => {
         });
 
         expect(result.content).toEqual([
-          { type: 'text', text: 'Hello, how can I help you?' },
+          { type: "text", text: "Hello, how can I help you?" },
         ]);
-        expect(result.finishReason).toEqual({raw: 'stop', unified: 'stop'}
-        );
+        expect(result.finishReason).toEqual({ raw: "stop", unified: "stop" });
         expect(result.usage).toEqual({
           inputTokens: {
             total: 10,
@@ -64,9 +63,9 @@ describe('OllamaResponsesLanguageModel', () => {
         });
       });
 
-      it('should expose raw response data', async () => {
+      it("should expose raw response data", async () => {
         prepareJsonResponse(server, {
-          headers: { 'x-custom-header': 'test-value' },
+          headers: { "x-custom-header": "test-value" },
         });
 
         const result = await model.doGenerate({
@@ -74,22 +73,22 @@ describe('OllamaResponsesLanguageModel', () => {
         });
 
         expect(result.response?.headers).toMatchObject({
-          'x-custom-header': 'test-value',
+          "x-custom-header": "test-value",
         });
         expect(result.request?.body).toBeDefined();
       });
     });
 
-    describe('Tool Calls', () => {
-      it('should handle tool calls', async () => {
+    describe("Tool Calls", () => {
+      it("should handle tool calls", async () => {
         prepareJsonResponse(server, {
-          content: 'I need to check the weather for you.',
+          content: "I need to check the weather for you.",
           toolCalls: [
             {
-              id: 'call_1',
+              id: "call_1",
               function: {
-                name: 'weather',
-                arguments: { location: 'San Francisco' },
+                name: "weather",
+                arguments: { location: "San Francisco" },
               },
             },
           ],
@@ -101,24 +100,24 @@ describe('OllamaResponsesLanguageModel', () => {
         });
 
         expect(result.content).toEqual([
-          { type: 'text', text: 'I need to check the weather for you.' },
+          { type: "text", text: "I need to check the weather for you." },
           {
-            type: 'tool-call',
-            toolCallId: 'call_1',
-            toolName: 'weather',
+            type: "tool-call",
+            toolCallId: "call_1",
+            toolName: "weather",
             input: '{"location":"San Francisco"}',
           },
         ]);
       });
 
-      it('should generate tool call ID when missing', async () => {
+      it("should generate tool call ID when missing", async () => {
         prepareJsonResponse(server, {
-          content: '',
+          content: "",
           toolCalls: [
             {
               function: {
-                name: 'weather',
-                arguments: { location: 'New York' },
+                name: "weather",
+                arguments: { location: "New York" },
               },
             },
           ],
@@ -130,16 +129,16 @@ describe('OllamaResponsesLanguageModel', () => {
         });
 
         expect(result.content[0]).toEqual({
-          type: 'tool-call',
-          toolCallId: 'mock-id-1',
-          toolName: 'weather',
+          type: "tool-call",
+          toolCallId: "mock-id-1",
+          toolName: "weather",
           input: '{"location":"New York"}',
         });
       });
     });
 
-    describe('Settings and Options', () => {
-      it('should return warnings for unsupported settings', async () => {
+    describe("Settings and Options", () => {
+      it("should return warnings for unsupported settings", async () => {
         prepareJsonResponse(server);
 
         const result = await model.doGenerate({
@@ -148,19 +147,27 @@ describe('OllamaResponsesLanguageModel', () => {
           seed: 123,
           presencePenalty: 0.5,
           frequencyPenalty: 0.3,
-          stopSequences: ['stop'],
+          stopSequences: ["stop"],
         });
 
         expect(result.warnings).toEqual([
-          { type: 'unsupported', feature: 'setting', details: 'topK' },
-          { type: 'unsupported', feature: 'setting', details: 'seed' },
-          { type: 'unsupported', feature: 'setting', details: 'presencePenalty' },
-          { type: 'unsupported', feature: 'setting', details: 'frequencyPenalty' },
-          { type: 'unsupported', feature: 'setting', details: 'stopSequences' },
+          { type: "unsupported", feature: "setting", details: "topK" },
+          { type: "unsupported", feature: "setting", details: "seed" },
+          {
+            type: "unsupported",
+            feature: "setting",
+            details: "presencePenalty",
+          },
+          {
+            type: "unsupported",
+            feature: "setting",
+            details: "frequencyPenalty",
+          },
+          { type: "unsupported", feature: "setting", details: "stopSequences" },
         ]);
       });
 
-      it('should handle JSON response format', async () => {
+      it("should handle JSON response format", async () => {
         prepareJsonResponse(server, {
           content: '{"result": "success"}',
         });
@@ -168,29 +175,29 @@ describe('OllamaResponsesLanguageModel', () => {
         const result = await model.doGenerate({
           prompt: TEST_PROMPT,
           responseFormat: {
-            type: 'json',
+            type: "json",
             schema: {
-              type: 'object',
-              properties: { result: { type: 'string' } },
+              type: "object",
+              properties: { result: { type: "string" } },
             },
           },
         });
 
         expect(result.content[0]).toEqual({
-          type: 'text',
+          type: "text",
           text: '{"result": "success"}',
         });
       });
 
-      it('should handle provider options', async () => {
+      it("should handle provider options", async () => {
         prepareJsonResponse(server);
 
         const result = await model.doGenerate({
           prompt: TEST_PROMPT,
           providerOptions: {
             ollama: {
-              user: 'test-user',
-              metadata: { session: 'test' },
+              user: "test-user",
+              metadata: { session: "test" },
               think: true,
             },
           },
@@ -200,22 +207,22 @@ describe('OllamaResponsesLanguageModel', () => {
       });
     });
 
-    describe('Error Handling', () => {
-      it('should handle API errors', async () => {
+    describe("Error Handling", () => {
+      it("should handle API errors", async () => {
         prepareErrorResponse(server);
 
         await expect(
           model.doGenerate({
             prompt: TEST_PROMPT,
-          })
+          }),
         ).rejects.toThrow();
       });
     });
   });
 
-  describe('doStream', () => {
-    describe('Basic Streaming', () => {
-      it('should handle basic streaming', async () => {
+  describe("doStream", () => {
+    describe("Basic Streaming", () => {
+      it("should handle basic streaming", async () => {
         prepareStreamResponse(server);
 
         const result = await model.doStream({
@@ -227,7 +234,7 @@ describe('OllamaResponsesLanguageModel', () => {
         expect(result.stream).toBeDefined();
       });
 
-      it('should handle stream with warnings', async () => {
+      it("should handle stream with warnings", async () => {
         prepareStreamResponse(server);
 
         const result = await model.doStream({

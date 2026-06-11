@@ -1,21 +1,21 @@
-import { EmbeddingModelV3Embedding } from '@ai-sdk/provider';
-import { createTestServer } from '../test-utils/test-server';
-import { createOllama } from '../ollama-provider';
+import { EmbeddingModelV3Embedding } from "@ai-sdk/provider";
+import { createTestServer } from "../test-utils/test-server";
+import { createOllama } from "../ollama-provider";
 
 const dummyEmbeddings = [
   [0.1, 0.2, 0.3, 0.4, 0.5],
   [0.6, 0.7, 0.8, 0.9, 1.0],
 ];
-const testValues = ['sunny day at the beach', 'rainy day in the city'];
+const testValues = ["sunny day at the beach", "rainy day in the city"];
 
 const provider = createOllama();
-const model = provider.embedding('dummy-embedding-model');
+const model = provider.embedding("dummy-embedding-model");
 
 const server = createTestServer({
-  'http://127.0.0.1:11434/api/embed': {},
+  "http://127.0.0.1:11434/api/embed": {},
 });
 
-describe('doEmbed', () => {
+describe("doEmbed", () => {
   function prepareJsonResponse({
     embeddings = dummyEmbeddings,
     usage = { prompt_eval_count: 8 },
@@ -25,11 +25,11 @@ describe('doEmbed', () => {
     usage?: { prompt_eval_count: number };
     headers?: Record<string, string>;
   } = {}) {
-    server.urls['http://127.0.0.1:11434/api/embed'].response = {
-      type: 'json-value',
+    server.urls["http://127.0.0.1:11434/api/embed"].response = {
+      type: "json-value",
       headers,
       body: {
-        model: 'dummy-embedding-model',
+        model: "dummy-embedding-model",
         embeddings,
         total_duration: 14143917,
         load_duration: 1019500,
@@ -38,7 +38,7 @@ describe('doEmbed', () => {
     };
   }
 
-  it('should extract embedding', async () => {
+  it("should extract embedding", async () => {
     prepareJsonResponse();
 
     const { embeddings } = await model.doEmbed({ values: testValues });
@@ -46,10 +46,10 @@ describe('doEmbed', () => {
     expect(embeddings).toStrictEqual(dummyEmbeddings);
   });
 
-  it('should expose the raw response', async () => {
+  it("should expose the raw response", async () => {
     prepareJsonResponse({
       headers: {
-        'test-header': 'test-value',
+        "test-header": "test-value",
       },
     });
 
@@ -57,16 +57,16 @@ describe('doEmbed', () => {
 
     expect(response?.headers).toStrictEqual({
       // default headers:
-      'content-length': '162',
-      'content-type': 'application/json',
+      "content-length": "162",
+      "content-type": "application/json",
 
       // custom header
-      'test-header': 'test-value',
+      "test-header": "test-value",
     });
     expect(response).toMatchSnapshot();
   });
 
-  it('should extract usage', async () => {
+  it("should extract usage", async () => {
     prepareJsonResponse({
       usage: { prompt_eval_count: 20 },
     });
@@ -76,74 +76,76 @@ describe('doEmbed', () => {
     expect(usage).toStrictEqual({ tokens: 20 });
   });
 
-  it('should pass the model and the values', async () => {
+  it("should pass the model and the values", async () => {
     prepareJsonResponse();
 
     await model.doEmbed({ values: testValues });
 
     expect(await server.calls[0].requestBodyJson).toStrictEqual({
-      model: 'dummy-embedding-model',
+      model: "dummy-embedding-model",
       input: testValues,
     });
   });
 
-  it('should pass the dimensions setting', async () => {
+  it("should pass the dimensions setting", async () => {
     prepareJsonResponse();
 
-    await provider.embedding('text-embedding-3-large', { dimensions: 64 }).doEmbed({
-      values: testValues,
-    });
+    await provider
+      .embedding("text-embedding-3-large", { dimensions: 64 })
+      .doEmbed({
+        values: testValues,
+      });
 
     expect(await server.calls[0].requestBodyJson).toStrictEqual({
-      model: 'text-embedding-3-large',
+      model: "text-embedding-3-large",
       input: testValues,
       dimensions: 64,
     });
   });
 
-  it('should pass the provider options', async () => {
+  it("should pass the provider options", async () => {
     prepareJsonResponse();
 
-    await provider.embedding('text-embedding-3-large').doEmbed({
+    await provider.embedding("text-embedding-3-large").doEmbed({
       values: testValues,
       providerOptions: {
         ollama: {
           dimensions: 64,
           truncate: true,
-          keepAlive: '10s',
+          keepAlive: "10s",
         },
-      }
+      },
     });
 
     expect(await server.calls[0].requestBodyJson).toStrictEqual({
-      model: 'text-embedding-3-large',
+      model: "text-embedding-3-large",
       input: testValues,
       dimensions: 64,
       truncate: true,
-      keep_alive: '10s',
+      keep_alive: "10s",
     });
   });
 
-  it('should pass headers', async () => {
+  it("should pass headers", async () => {
     prepareJsonResponse();
 
     const provider = createOllama({
       headers: {
-        'Custom-Provider-Header': 'provider-header-value',
+        "Custom-Provider-Header": "provider-header-value",
       },
     });
 
-    await provider.embedding('text-embedding-3-large').doEmbed({
+    await provider.embedding("text-embedding-3-large").doEmbed({
       values: testValues,
       headers: {
-        'Custom-Request-Header': 'request-header-value',
+        "Custom-Request-Header": "request-header-value",
       },
     });
 
     expect(server.calls[0].requestHeaders).toMatchObject({
-      'content-type': 'application/json',
-      'custom-provider-header': 'provider-header-value',
-      'custom-request-header': 'request-header-value',
+      "content-type": "application/json",
+      "custom-provider-header": "provider-header-value",
+      "custom-request-header": "request-header-value",
     });
   });
 });

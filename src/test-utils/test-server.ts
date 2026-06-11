@@ -3,16 +3,16 @@
  * This provides HTTP request interception for testing purposes.
  */
 
-import { afterAll, afterEach, beforeAll } from 'vitest';
-import { setupServer, SetupServerApi } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import type { JsonBodyType } from 'msw';
+import { afterAll, afterEach, beforeAll } from "vitest";
+import { setupServer, SetupServerApi } from "msw/node";
+import { http, HttpResponse } from "msw";
+import type { JsonBodyType } from "msw";
 
 // Re-export utilities that were previously in @ai-sdk/provider-utils/test
-export { convertReadableStreamToArray } from '@ai-sdk/provider-utils/test';
+export { convertReadableStreamToArray } from "@ai-sdk/provider-utils/test";
 
 type ResponseConfig = {
-  type: 'json-value' | 'stream-chunks' | 'error';
+  type: "json-value" | "stream-chunks" | "error";
   body?: JsonBodyType;
   chunks?: string[];
   status?: number;
@@ -48,7 +48,7 @@ export function createTestServer(config: TestServerConfig): {
     urls[url] = { ...urlConfig, calls: [] };
   }
 
-  const handlers = Object.keys(config).map(url =>
+  const handlers = Object.keys(config).map((url) =>
     http.post(url, async ({ request }) => {
       const urlConfig = urls[url]!;
 
@@ -78,17 +78,23 @@ export function createTestServer(config: TestServerConfig): {
       const response = urlConfig.response;
 
       if (!response) {
-        return HttpResponse.json({ error: 'No response configured' }, { status: 500 });
+        return HttpResponse.json(
+          { error: "No response configured" },
+          { status: 500 },
+        );
       }
 
       const status = response.status ?? 200;
       const responseHeaders = response.headers ?? {};
 
       switch (response.type) {
-        case 'json-value':
-          return HttpResponse.json(response.body ?? null, { status, headers: responseHeaders });
+        case "json-value":
+          return HttpResponse.json(response.body ?? null, {
+            status,
+            headers: responseHeaders,
+          });
 
-        case 'stream-chunks': {
+        case "stream-chunks": {
           const encoder = new TextEncoder();
           const chunks = response.chunks ?? [];
           const stream = new ReadableStream({
@@ -102,27 +108,30 @@ export function createTestServer(config: TestServerConfig): {
           return new HttpResponse(stream, {
             status,
             headers: {
-              'Content-Type': 'text/event-stream',
+              "Content-Type": "text/event-stream",
               ...responseHeaders,
             },
           });
         }
 
-        case 'error':
-          return HttpResponse.json(response.body ?? { error: 'Test error' }, {
+        case "error":
+          return HttpResponse.json(response.body ?? { error: "Test error" }, {
             status: response.status ?? 500,
             headers: responseHeaders,
           });
 
         default:
-          return HttpResponse.json(response.body ?? null, { status, headers: responseHeaders });
+          return HttpResponse.json(response.body ?? null, {
+            status,
+            headers: responseHeaders,
+          });
       }
-    })
+    }),
   );
 
   const server = setupServer(...handlers);
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
   afterEach(() => {
     server.resetHandlers();
     // Clear calls between tests

@@ -8,21 +8,24 @@ import {
   LanguageModelV3StreamResult,
   LanguageModelV3Usage,
   SharedV3Headers,
-  SharedV3Warning
+  SharedV3Warning,
 } from "@ai-sdk/provider";
 import {
   combineHeaders,
   createJsonResponseHandler,
   generateId,
   ParseResult,
-  postJsonToApi
+  postJsonToApi,
 } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaCompletionPrompt } from "../adaptors/convert-to-ollama-completion-prompt";
 import { mapOllamaFinishReason } from "../adaptors/map-ollama-finish-reason";
 import { getResponseMetadata } from "../common/get-response-metadata";
 import { createNdjsonStreamResponseHandler } from "../common/ndjson-stream-handler";
-import { OllamaCompletionModelId, OllamaCompletionSettings } from "./ollama-completion-settings";
+import {
+  OllamaCompletionModelId,
+  OllamaCompletionSettings,
+} from "./ollama-completion-settings";
 import { ollamaFailedResponseHandler } from "./ollama-error";
 
 // Completion-specific provider options schema
@@ -40,7 +43,9 @@ type OllamaCompletionConfig = {
   fetch?: typeof fetch;
 };
 
-export type OllamaCompletionProviderOptions = z.infer<typeof ollamaCompletionProviderOptions>;
+export type OllamaCompletionProviderOptions = z.infer<
+  typeof ollamaCompletionProviderOptions
+>;
 
 export class OllamaCompletionLanguageModel implements LanguageModelV3 {
   readonly specificationVersion = "v3" as const;
@@ -140,9 +145,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
     };
   }
 
-  async doGenerate(
-    options: LanguageModelV3CallOptions,
-  ): Promise<{
+  async doGenerate(options: LanguageModelV3CallOptions): Promise<{
     content: Array<LanguageModelV3Content>;
     finishReason: LanguageModelV3FinishReason;
     usage: LanguageModelV3Usage;
@@ -211,7 +214,9 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
 
   async doStream(
     options: LanguageModelV3CallOptions,
-  ): Promise<LanguageModelV3StreamResult & {warnings: Array<SharedV3Warning>}> {
+  ): Promise<
+    LanguageModelV3StreamResult & { warnings: Array<SharedV3Warning> }
+  > {
     const { args, warnings } = this.getArgs(options);
 
     const body = {
@@ -261,12 +266,11 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
           LanguageModelV3StreamPart
         >({
           transform(chunk, controller) {
-
-            if(!chunk.success){
+            if (!chunk.success) {
               controller.enqueue({ type: "error", error: chunk.rawValue });
               return;
             }
-            
+
             const value = chunk.value;
 
             // handle error chunks:
@@ -322,7 +326,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
       ),
       request: { body: JSON.stringify(body) },
       response: { headers: responseHeaders },
-      warnings: warnings
+      warnings: warnings,
     };
   }
 }
@@ -343,5 +347,3 @@ const baseOllamaResponseSchema = z.object({
   prompt_eval_count: z.number().optional(),
   prompt_eval_duration: z.number().optional(),
 });
-
-

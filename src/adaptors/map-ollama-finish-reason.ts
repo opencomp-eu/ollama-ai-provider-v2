@@ -1,34 +1,34 @@
-import { LanguageModelV3FinishReason } from '@ai-sdk/provider';
+import { LanguageModelV3FinishReason } from "@ai-sdk/provider";
 
 export function mapOllamaFinishReason(
   finishReason: string | undefined,
 ): LanguageModelV3FinishReason {
   switch (finishReason) {
-    case 'stop':
+    case "stop":
       return {
         raw: finishReason,
-        unified: 'stop'
+        unified: "stop",
       };
-    case 'length':
+    case "length":
       return {
         raw: finishReason,
-        unified: 'length'
+        unified: "length",
       };
-    case 'content_filter':
+    case "content_filter":
       return {
         raw: finishReason,
-        unified: 'content-filter'
+        unified: "content-filter",
       };
-    case 'function_call':
-    case 'tool_calls':
+    case "function_call":
+    case "tool_calls":
       return {
         raw: finishReason,
-        unified: 'tool-calls'
+        unified: "tool-calls",
       };
     default:
       return {
         raw: finishReason,
-        unified: 'other'
+        unified: "other",
       };
   }
 }

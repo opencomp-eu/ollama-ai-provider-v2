@@ -21,11 +21,11 @@ import { OllamaChatModelId } from "../ollama-chat-settings";
 import {
   OllamaResponseProcessor,
   OllamaResponse,
-  baseOllamaResponseSchema
+  baseOllamaResponseSchema,
 } from "./ollama-responses-processor";
 import {
   OllamaRequestBuilder,
-  OllamaResponsesProviderOptions
+  OllamaResponsesProviderOptions,
 } from "./ollama-responses-request-builder";
 import { OllamaStreamProcessor } from "./ollama-responses-stream-processor";
 
@@ -49,14 +49,10 @@ export class OllamaResponsesLanguageModel implements LanguageModelV3 {
   }
 
   readonly supportedUrls: Record<string, RegExp[]> = {
-    'image/*': [
-      /^https?:\/\/.*$/
-    ]
+    "image/*": [/^https?:\/\/.*$/],
   };
 
-  async doGenerate(
-    options: LanguageModelV3CallOptions,
-  ): Promise<{
+  async doGenerate(options: LanguageModelV3CallOptions): Promise<{
     content: Array<LanguageModelV3Content>;
     finishReason: LanguageModelV3FinishReason;
     usage: LanguageModelV3Usage;
@@ -81,12 +77,16 @@ export class OllamaResponsesLanguageModel implements LanguageModelV3 {
       headers: combineHeaders(this.config.headers(), options.headers),
       body: { ...body, stream: false },
       failedResponseHandler: ollamaFailedResponseHandler as any,
-      successfulResponseHandler: createJsonResponseHandler(baseOllamaResponseSchema),
+      successfulResponseHandler: createJsonResponseHandler(
+        baseOllamaResponseSchema,
+      ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
     });
 
-    const processedResponse = this.responseProcessor.processGenerateResponse(response as OllamaResponse);
+    const processedResponse = this.responseProcessor.processGenerateResponse(
+      response as OllamaResponse,
+    );
 
     return {
       ...processedResponse,
@@ -101,9 +101,7 @@ export class OllamaResponsesLanguageModel implements LanguageModelV3 {
     };
   }
 
-  async doStream(
-    options: LanguageModelV3CallOptions,
-  ): Promise<{
+  async doStream(options: LanguageModelV3CallOptions): Promise<{
     stream: ReadableStream<LanguageModelV3StreamPart>;
     warnings: Array<SharedV3Warning>;
     request?: { body?: unknown };
@@ -122,7 +120,9 @@ export class OllamaResponsesLanguageModel implements LanguageModelV3 {
       headers: combineHeaders(this.config.headers(), options.headers),
       body: { ...body, stream: true },
       failedResponseHandler: ollamaFailedResponseHandler as any,
-      successfulResponseHandler: createNdjsonStreamResponseHandler(baseOllamaResponseSchema),
+      successfulResponseHandler: createNdjsonStreamResponseHandler(
+        baseOllamaResponseSchema,
+      ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
     });
@@ -131,11 +131,11 @@ export class OllamaResponsesLanguageModel implements LanguageModelV3 {
 
     return {
       stream: response.pipeThrough(
-        streamProcessor.createTransformStream(warnings, options)
+        streamProcessor.createTransformStream(warnings, options),
       ),
       request: { body },
       response: { headers: responseHeaders },
-      warnings: warnings
+      warnings: warnings,
     };
   }
 

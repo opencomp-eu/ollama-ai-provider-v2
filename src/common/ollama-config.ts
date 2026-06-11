@@ -1,4 +1,4 @@
-import { FetchFunction } from '@ai-sdk/provider-utils';
+import { FetchFunction } from "@ai-sdk/provider-utils";
 
 export type OllamaConfig = {
   provider: string;

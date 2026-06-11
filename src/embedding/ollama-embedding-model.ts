@@ -25,7 +25,9 @@ const ollamaEmbeddingProviderOptions = z.object({
   keepAlive: z.string().optional(),
 });
 
-export type OllamaEmbeddingProviderOptions = z.infer<typeof ollamaEmbeddingProviderOptions>;
+export type OllamaEmbeddingProviderOptions = z.infer<
+  typeof ollamaEmbeddingProviderOptions
+>;
 
 export class OllamaEmbeddingModel implements EmbeddingModelV3 {
   readonly specificationVersion = "v3" as const;
@@ -40,7 +42,7 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
   constructor(
     modelId: OllamaEmbeddingModelId,
     settings: OllamaEmbeddingSettings,
-    config: OllamaConfig
+    config: OllamaConfig,
   ) {
     this.modelId = modelId;
     this.settings = settings;
@@ -50,11 +52,7 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
     this.supportsParallelCalls = settings.supportsParallelCalls ?? true;
   }
 
-  private getArgs({
-    values,
-  }: {
-    values: Array<string>;
-  }) {
+  private getArgs({ values }: { values: Array<string> }) {
     return {
       // model id:
       model: this.modelId,
@@ -87,7 +85,10 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
     };
     warnings: Array<SharedV3Warning>;
   }> {
-    if (this.maxEmbeddingsPerCall && values.length > this.maxEmbeddingsPerCall) {
+    if (
+      this.maxEmbeddingsPerCall &&
+      values.length > this.maxEmbeddingsPerCall
+    ) {
       throw new TooManyEmbeddingValuesForCallError({
         provider: this.provider,
         modelId: this.modelId,
@@ -97,7 +98,7 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
     }
 
     const ollamaOptions = await parseProviderOptions({
-      provider: 'ollama',
+      provider: "ollama",
       providerOptions,
       schema: ollamaEmbeddingProviderOptions,
     });
@@ -135,7 +136,9 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
       fetch: this.config.fetch,
     });
 
-    const typedResponse = response as z.infer<typeof ollamaTextEmbeddingResponseSchema>;
+    const typedResponse = response as z.infer<
+      typeof ollamaTextEmbeddingResponseSchema
+    >;
 
     return {
       embeddings: typedResponse.embeddings.map((item: number[]) => item),

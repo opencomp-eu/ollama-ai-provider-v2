@@ -1,31 +1,31 @@
 import {
   LanguageModelV2FilePart,
   LanguageModelV2Prompt,
-} from '@ai-sdk/provider';
-import { OllamaChatPrompt } from './ollama-chat-prompt';
+} from "@ai-sdk/provider";
+import { OllamaChatPrompt } from "./ollama-chat-prompt";
 
 export function convertToOllamaChatMessages({
   prompt,
-  systemMessageMode = 'system',
+  systemMessageMode = "system",
 }: {
   prompt: LanguageModelV2Prompt;
-  systemMessageMode?: 'system' | 'developer' | 'remove';
+  systemMessageMode?: "system" | "developer" | "remove";
 }): OllamaChatPrompt {
   const messages: OllamaChatPrompt = [];
 
   for (const { role, content } of prompt) {
     switch (role) {
-      case 'system': {
+      case "system": {
         switch (systemMessageMode) {
-          case 'system': {
-            messages.push({ role: 'system', content });
+          case "system": {
+            messages.push({ role: "system", content });
             break;
           }
-          case 'developer': {
-            messages.push({ role: 'developer', content });
+          case "developer": {
+            messages.push({ role: "developer", content });
             break;
           }
-          case 'remove': {
+          case "remove": {
             break;
           }
           default: {
@@ -38,45 +38,51 @@ export function convertToOllamaChatMessages({
         break;
       }
 
-      case 'user': {
-        if (content.length === 1 && content[0].type === 'text') {
-          messages.push({ role: 'user', content: content[0].text });
+      case "user": {
+        if (content.length === 1 && content[0].type === "text") {
+          messages.push({ role: "user", content: content[0].text });
           break;
         }
 
-        const userText = content.filter((part) => part.type === 'text').map((part) => part.text).join('');
+        const userText = content
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join("");
         const images = content
-          .filter((part) => part.type === 'file' && part.mediaType.startsWith('image/'))
+          .filter(
+            (part) =>
+              part.type === "file" && part.mediaType.startsWith("image/"),
+          )
           .map((part) => (part as LanguageModelV2FilePart).data);
 
         messages.push({
-          role: 'user',
+          role: "user",
           content: userText.length > 0 ? userText : [],
-          images: images.length > 0 ? images : undefined
+          images: images.length > 0 ? images : undefined,
         });
 
         break;
       }
 
-      case 'assistant': {
-        let text = '';
-        let thinking = '';
+      case "assistant": {
+        let text = "";
+        let thinking = "";
         const toolCalls: Array<{
           id: string;
-          type: 'function';
+          type: "function";
           function: { name: string; arguments: object };
         }> = [];
 
         for (const part of content) {
           switch (part.type) {
-            case 'text': {
+            case "text": {
               text += part.text;
               break;
             }
-            case 'tool-call': {
+            case "tool-call": {
               toolCalls.push({
                 id: part.toolCallId,
-                type: 'function',
+                type: "function",
                 function: {
                   name: part.toolName,
                   arguments: part.input as object,
@@ -84,7 +90,7 @@ export function convertToOllamaChatMessages({
               });
               break;
             }
-            case 'reasoning': {
+            case "reasoning": {
               thinking += part.text;
               break;
             }
@@ -95,7 +101,7 @@ export function convertToOllamaChatMessages({
         }
 
         messages.push({
-          role: 'assistant',
+          role: "assistant",
           content: text,
           ...(thinking && { thinking }),
           tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
@@ -104,25 +110,25 @@ export function convertToOllamaChatMessages({
         break;
       }
 
-      case 'tool': {
+      case "tool": {
         for (const toolResponse of content) {
           const output = toolResponse.output;
 
           let contentValue: string;
           switch (output.type) {
-            case 'text':
-            case 'error-text':
+            case "text":
+            case "error-text":
               contentValue = output.value;
               break;
-            case 'content':
-            case 'json':
-            case 'error-json':
+            case "content":
+            case "json":
+            case "error-json":
               contentValue = JSON.stringify(output.value);
               break;
           }
 
           messages.push({
-            role: 'tool',
+            role: "tool",
             tool_call_id: toolResponse.toolCallId,
             content: contentValue,
           });

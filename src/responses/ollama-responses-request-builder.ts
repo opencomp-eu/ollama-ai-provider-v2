@@ -1,13 +1,13 @@
-import {
-  SharedV3Warning
-} from "@ai-sdk/provider";
+import { SharedV3Warning } from "@ai-sdk/provider";
 import { parseProviderOptions } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaChatMessages } from "../adaptors/convert-to-ollama-chat-messages";
-import { OllamaChatModelId, ollamaProviderOptions } from "../ollama-chat-settings";
+import {
+  OllamaChatModelId,
+  ollamaProviderOptions,
+} from "../ollama-chat-settings";
 import { convertToOllamaResponsesMessages } from "./convert-to-ollama-responses-messages";
 import { prepareResponsesTools } from "./ollama-responses-prepare-tools";
-
 
 export type OllamaResponsesProviderOptions = z.infer<
   typeof ollamaProviderOptions
@@ -91,11 +91,14 @@ export class OllamaRequestBuilder {
       ollamaOptions,
     });
 
-    const { tools: ollamaTools, toolChoice: ollamaToolChoice, toolWarnings } =
-      prepareResponsesTools({
-        tools,
-        toolChoice,
-      });
+    const {
+      tools: ollamaTools,
+      toolChoice: ollamaToolChoice,
+      toolWarnings,
+    } = prepareResponsesTools({
+      tools,
+      toolChoice,
+    });
 
     return {
       args: {
@@ -132,14 +135,20 @@ export class OllamaRequestBuilder {
 
     for (const { value, name } of unsupportedSettings) {
       if (value != null) {
-        warnings.push({ type: "unsupported", feature: "setting", details: name });
+        warnings.push({
+          type: "unsupported",
+          feature: "setting",
+          details: name,
+        });
       }
     }
 
     return warnings;
   }
 
-  private async parseProviderOptions(providerOptions: any): Promise<OllamaResponsesProviderOptions | null> {
+  private async parseProviderOptions(
+    providerOptions: any,
+  ): Promise<OllamaResponsesProviderOptions | null> {
     const result = await parseProviderOptions({
       provider: "ollama",
       providerOptions,
@@ -180,7 +189,7 @@ export class OllamaRequestBuilder {
       }),
 
       think: ollamaOptions?.think ?? false,
-      options: ollamaOptions?.options?? undefined
+      options: ollamaOptions?.options ?? undefined,
     };
   }
-} 
+}
