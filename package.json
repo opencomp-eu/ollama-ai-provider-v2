@@ -38,7 +38,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "25.9.3",
     "@vercel/ai-tsconfig": "./tsconfig",
-    "ai": "^6.0.198",
+    "ai": "^6.0.205",
     "eslint": "^10.5.0",
     "globals": "^17.6.0",
     "msw": "^2.12.14",
