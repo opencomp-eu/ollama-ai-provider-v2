@@ -12,8 +12,8 @@ importers:
         specifier: ^3.0.10
         version: 3.0.10
       '@ai-sdk/provider-utils':
-        specifier: ^4.0.29
-        version: 4.0.29(zod@4.4.3)
+        specifier: ^4.0.30
+        version: 4.0.30(zod@4.4.3)
     devDependencies:
       '@edge-runtime/vm':
         specifier: ^5.0.0
