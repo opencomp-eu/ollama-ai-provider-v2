@@ -39,7 +39,7 @@
     "@types/node": "26.0.0",
     "@vercel/ai-tsconfig": "./tsconfig",
     "ai": "^6.0.208",
-    "eslint": "^10.5.0",
+    "eslint": "^10.6.0",
     "globals": "^17.6.0",
     "msw": "^2.12.14",
     "prettier": "3.8.4",
