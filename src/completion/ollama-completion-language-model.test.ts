@@ -24,7 +24,7 @@ describe("OllamaCompletionLanguageModel", () => {
 
   describe("Model Properties", () => {
     it("should have correct specification version", () => {
-      expect(model.specificationVersion).toBe("v3");
+      expect(model.specificationVersion).toBe("v4");
     });
 
     it("should have correct model ID", () => {
@@ -157,6 +157,10 @@ describe("OllamaCompletionLanguageModel", () => {
       const parts = await convertReadableStreamToArray(result.stream);
 
       expect(parts[0]).toMatchObject({
+        type: "stream-start",
+        warnings: [],
+      });
+      expect(parts[1]).toMatchObject({
         type: "response-metadata",
         modelId: TEST_MODEL_ID,
       });

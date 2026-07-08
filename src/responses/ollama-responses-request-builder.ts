@@ -1,6 +1,7 @@
-import { SharedV3Warning } from "@ai-sdk/provider";
+import { LanguageModelV4CallOptions, SharedV4Warning } from "@ai-sdk/provider";
 import { parseProviderOptions } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
+import { resolveOllamaThinkFlag } from "../adaptors/ollama-v4-helpers";
 import { convertToOllamaChatMessages } from "../adaptors/convert-to-ollama-chat-messages";
 import {
   OllamaChatModelId,
@@ -8,7 +9,6 @@ import {
 } from "../ollama-chat-settings";
 import { convertToOllamaResponsesMessages } from "./convert-to-ollama-responses-messages";
 import { prepareResponsesTools } from "./ollama-responses-prepare-tools";
-import { OllamaResponsesPrompt } from "./ollama-responses-api-types";
 import { OllamaChatPrompt } from "../adaptors/ollama-chat-prompt";
 
 export type OllamaResponsesProviderOptions = z.infer<
@@ -25,11 +25,12 @@ interface RequestBuilderOptions {
   presencePenalty?: number;
   frequencyPenalty?: number;
   seed?: number;
-  prompt: any;
-  providerOptions?: Record<string, unknown> | undefined;
-  tools?: any;
-  toolChoice?: any;
-  responseFormat?: any;
+  reasoning?: LanguageModelV4CallOptions["reasoning"];
+  prompt: LanguageModelV4CallOptions["prompt"];
+  providerOptions?: LanguageModelV4CallOptions["providerOptions"];
+  tools?: LanguageModelV4CallOptions["tools"];
+  toolChoice?: LanguageModelV4CallOptions["toolChoice"];
+  responseFormat?: LanguageModelV4CallOptions["responseFormat"];
 }
 
 interface RequestBuilderResult {
@@ -39,13 +40,13 @@ interface RequestBuilderResult {
     temperature?: number;
     top_p?: number;
     max_output_tokens?: number;
-    format?: any;
+    format?: unknown;
     user?: string;
     think?: boolean;
-    tools?: any;
-    tool_choice?: any;
+    tools?: unknown;
+    tool_choice?: unknown;
   };
-  warnings: SharedV3Warning[];
+  warnings: SharedV4Warning[];
 }
 
 export class OllamaRequestBuilder {
@@ -59,6 +60,7 @@ export class OllamaRequestBuilder {
     presencePenalty,
     frequencyPenalty,
     seed,
+    reasoning,
     prompt,
     providerOptions,
     tools,
@@ -73,11 +75,10 @@ export class OllamaRequestBuilder {
       stopSequences,
     });
 
-    const { messages, warnings: messageWarnings } =
-      convertToOllamaResponsesMessages({
-        prompt,
-        systemMessageMode: "system",
-      });
+    const { warnings: messageWarnings } = convertToOllamaResponsesMessages({
+      prompt,
+      systemMessageMode: "system",
+    });
 
     warnings.push(...messageWarnings);
 
@@ -90,7 +91,9 @@ export class OllamaRequestBuilder {
       topP,
       maxOutputTokens,
       responseFormat,
+      reasoning,
       ollamaOptions,
+      warnings,
     });
 
     const {
@@ -124,8 +127,8 @@ export class OllamaRequestBuilder {
     presencePenalty?: number;
     frequencyPenalty?: number;
     stopSequences?: string[];
-  }): SharedV3Warning[] {
-    const warnings: SharedV3Warning[] = [];
+  }): SharedV4Warning[] {
+    const warnings: SharedV4Warning[] = [];
 
     const unsupportedSettings = [
       { value: topK, name: "topK" },
@@ -149,7 +152,7 @@ export class OllamaRequestBuilder {
   }
 
   private async parseProviderOptions(
-    providerOptions: any,
+    providerOptions: LanguageModelV4CallOptions["providerOptions"],
   ): Promise<OllamaResponsesProviderOptions | null> {
     const result = await parseProviderOptions({
       provider: "ollama",
@@ -166,21 +169,26 @@ export class OllamaRequestBuilder {
     topP,
     maxOutputTokens,
     responseFormat,
+    reasoning,
     ollamaOptions,
+    warnings,
   }: {
     modelId: OllamaChatModelId;
-    prompt: any;
+    prompt: LanguageModelV4CallOptions["prompt"];
     temperature?: number;
     topP?: number;
     maxOutputTokens?: number;
-    responseFormat?: any;
+    responseFormat?: LanguageModelV4CallOptions["responseFormat"];
+    reasoning?: LanguageModelV4CallOptions["reasoning"];
     ollamaOptions: OllamaResponsesProviderOptions | null;
+    warnings: SharedV4Warning[];
   }) {
     return {
       model: modelId,
       messages: convertToOllamaChatMessages({
         prompt,
         systemMessageMode: "system",
+        warnings,
       }),
       temperature,
       top_p: topP,
@@ -190,7 +198,11 @@ export class OllamaRequestBuilder {
         format: responseFormat.schema != null ? responseFormat.schema : "json",
       }),
 
-      think: ollamaOptions?.think ?? false,
+      think: resolveOllamaThinkFlag({
+        reasoning,
+        ollamaThink: ollamaOptions?.think,
+        warnings,
+      }),
       options: ollamaOptions?.options ?? undefined,
     };
   }

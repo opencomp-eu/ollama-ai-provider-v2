@@ -1,15 +1,21 @@
 import {
-  LanguageModelV2FilePart,
-  LanguageModelV2Prompt,
+  LanguageModelV4Prompt,
+  SharedV4Warning,
 } from "@ai-sdk/provider";
 import { OllamaChatPrompt } from "./ollama-chat-prompt";
+import {
+  extractOllamaFileData,
+  formatOllamaToolResultOutput,
+} from "./ollama-v4-helpers";
 
 export function convertToOllamaChatMessages({
   prompt,
   systemMessageMode = "system",
+  warnings = [],
 }: {
-  prompt: LanguageModelV2Prompt;
+  prompt: LanguageModelV4Prompt;
   systemMessageMode?: "system" | "developer" | "remove";
+  warnings?: Array<SharedV4Warning>;
 }): OllamaChatPrompt {
   const messages: OllamaChatPrompt = [];
 
@@ -49,11 +55,10 @@ export function convertToOllamaChatMessages({
           .map((part) => part.text)
           .join("");
         const images = content
-          .filter(
-            (part) =>
-              part.type === "file" && part.mediaType.startsWith("image/"),
-          )
-          .map((part) => (part as LanguageModelV2FilePart).data);
+          .filter((part): part is Extract<typeof part, { type: "file" }> => {
+            return part.type === "file" && part.mediaType.startsWith("image/");
+          })
+          .map((part) => extractOllamaFileData(part.data));
 
         messages.push({
           role: "user",
@@ -94,8 +99,19 @@ export function convertToOllamaChatMessages({
               thinking += part.text;
               break;
             }
+            case "file":
+            case "reasoning-file":
+            case "custom":
+            case "tool-result": {
+              warnings.push({
+                type: "other",
+                message: `Unsupported assistant part type "${part.type}" for Ollama chat messages`,
+              });
+              break;
+            }
             default: {
-              throw new Error(`Unsupported part: ${part}`);
+              const _exhaustiveCheck: never = part;
+              throw new Error(`Unsupported part: ${_exhaustiveCheck}`);
             }
           }
         }
@@ -112,26 +128,28 @@ export function convertToOllamaChatMessages({
 
       case "tool": {
         for (const toolResponse of content) {
-          const output = toolResponse.output;
-
-          let contentValue: string;
-          switch (output.type) {
-            case "text":
-            case "error-text":
-              contentValue = output.value;
+          switch (toolResponse.type) {
+            case "tool-result": {
+              messages.push({
+                role: "tool",
+                tool_call_id: toolResponse.toolCallId,
+                content: formatOllamaToolResultOutput(toolResponse.output),
+              });
               break;
-            case "content":
-            case "json":
-            case "error-json":
-              contentValue = JSON.stringify(output.value);
+            }
+            case "tool-approval-response": {
+              warnings.push({
+                type: "other",
+                message:
+                  "tool approval response parts are not supported for Ollama chat messages",
+              });
               break;
+            }
+            default: {
+              const _exhaustiveCheck: never = toolResponse;
+              throw new Error(`Unsupported tool part: ${_exhaustiveCheck}`);
+            }
           }
-
-          messages.push({
-            role: "tool",
-            tool_call_id: toolResponse.toolCallId,
-            content: contentValue,
-          });
         }
         break;
       }

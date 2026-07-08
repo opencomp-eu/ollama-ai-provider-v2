@@ -1,8 +1,8 @@
-import { LanguageModelV3Prompt } from "@ai-sdk/provider";
+import { LanguageModelV4Prompt } from "@ai-sdk/provider";
 import { createTestServer } from "../../test-utils/test-server";
 import { OllamaCompletionModelId } from "../ollama-completion-settings";
 
-export const TEST_PROMPT: LanguageModelV3Prompt = [
+export const TEST_PROMPT: LanguageModelV4Prompt = [
   { role: "user", content: [{ type: "text", text: "Hello" }] },
 ];
 

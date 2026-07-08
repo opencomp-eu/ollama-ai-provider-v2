@@ -4,7 +4,7 @@ Use Ollama with the Vercel AI SDK, implementing the official Ollama API. This pr
 
 [![npm version](https://badge.fury.io/js/ollama-ai-provider-v2.svg)](https://badge.fury.io/js/ollama-ai-provider-v2)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22+-green.svg)](https://nodejs.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Why Choose Ollama Provider V2?
@@ -15,7 +15,7 @@ Use Ollama with the Vercel AI SDK, implementing the official Ollama API. This pr
 - ✅ **Advanced Features** - Tool calling, streaming, thinking mode, embeddings, and completion models
 - ✅ **Type Safety** - Full TypeScript support with comprehensive type definitions
 - ✅ **Zero Configuration** - Works out-of-the-box with sensible defaults
-- ✅ **Actively Maintained** - Regular updates and AI SDK v5+ compatibility
+- ✅ **Actively Maintained** - Regular updates and AI SDK v7 compatibility
 
 ## Quick Start
 
@@ -80,6 +80,16 @@ const { text, toolCalls } = await generateText({
 ### Reasoning Mode (Thinking)
 
 Unique feature for models that support chain-of-thought reasoning:
+
+```typescript
+const { text } = await generateText({
+  model: ollama('deepseek-r1:7b'),
+  reasoning: 'high', // AI SDK 7 top-level reasoning option
+  prompt: 'Solve this complex math problem step by step: 2x + 5 = 17',
+});
+```
+
+You can also use the Ollama-specific provider option:
 
 ```typescript
 const { text } = await generateText({
@@ -181,8 +191,8 @@ Works with any model in your Ollama installation, including:
 ## Prerequisites
 
 1. [Ollama](https://ollama.com) installed and running
-2. AI SDK v5+ (`ai` package)
-3. Node.js 18+ for development
+2. AI SDK v7 (`ai@^7`)
+3. Node.js 22+ (required by AI SDK 7)
 
 ```bash
 # Start Ollama
@@ -191,6 +201,14 @@ ollama serve
 # Pull a model
 ollama pull llama3.2
 ```
+
+## Upgrading from 3.x
+
+Version 4.0.0 adds AI SDK 7 support via the Provider V4 specification.
+
+- Requires `ai@^7` and Node.js 22+
+- Drops AI SDK 5/6 support
+- No changes to the public `createOllama()` / `ollama()` API surface
 
 ## Contributing
 

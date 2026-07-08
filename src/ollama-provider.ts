@@ -1,7 +1,7 @@
 import {
-  EmbeddingModelV3,
-  LanguageModelV3,
-  ProviderV3,
+  EmbeddingModelV4,
+  LanguageModelV4,
+  ProviderV4,
   NoSuchModelError,
 } from "@ai-sdk/provider";
 import { FetchFunction, withoutTrailingSlash } from "@ai-sdk/provider-utils";
@@ -22,13 +22,13 @@ import {
 } from "./embedding/ollama-embedding-settings";
 import { OllamaResponsesLanguageModel } from "./responses/ollama-responses-language-model";
 
-export interface OllamaProvider extends ProviderV3 {
-  (modelId: OllamaChatModelId): LanguageModelV3;
+export interface OllamaProvider extends ProviderV4 {
+  (modelId: OllamaChatModelId): LanguageModelV4;
 
   /**
 Creates an Ollama model for text generation.
    */
-  languageModel(modelId: OllamaChatModelId): LanguageModelV3;
+  languageModel(modelId: OllamaChatModelId): LanguageModelV4;
 
   /**
 Creates an Ollama chat model for text generation.
@@ -36,7 +36,7 @@ Creates an Ollama chat model for text generation.
   chat(
     modelId: OllamaChatModelId,
     settings?: OllamaProviderOptions,
-  ): LanguageModelV3;
+  ): LanguageModelV4;
 
   /**
 Creates an Ollama completion model for text generation.
@@ -44,7 +44,7 @@ Creates an Ollama completion model for text generation.
   completion(
     modelId: OllamaCompletionModelId,
     settings?: OllamaCompletionSettings,
-  ): LanguageModelV3;
+  ): LanguageModelV4;
 
   /**
 Creates a model for text embeddings.
@@ -52,7 +52,7 @@ Creates a model for text embeddings.
   embedding(
     modelId: OllamaEmbeddingModelId,
     settings?: OllamaEmbeddingSettings,
-  ): EmbeddingModelV3;
+  ): EmbeddingModelV4;
 
   /**
 Creates a model for text embeddings.
@@ -62,7 +62,7 @@ Creates a model for text embeddings.
   textEmbedding(
     modelId: OllamaEmbeddingModelId,
     settings?: OllamaEmbeddingSettings,
-  ): EmbeddingModelV3;
+  ): EmbeddingModelV4;
 
   /**
 Creates a model for text embeddings.
@@ -70,7 +70,7 @@ Creates a model for text embeddings.
   textEmbeddingModel(
     modelId: OllamaEmbeddingModelId,
     settings?: OllamaEmbeddingSettings,
-  ): EmbeddingModelV3;
+  ): EmbeddingModelV4;
 }
 
 export interface OllamaProviderSettings {
@@ -181,7 +181,7 @@ export function createOllama(
     return createLanguageModel(modelId);
   };
 
-  provider.specificationVersion = "v3" as const;
+  provider.specificationVersion = "v4" as const;
   provider.languageModel = createLanguageModel;
   provider.chat = createLanguageModel;
   provider.completion = createCompletionModel;

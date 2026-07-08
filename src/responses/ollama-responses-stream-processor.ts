@@ -1,10 +1,10 @@
 import {
   InvalidResponseDataError,
-  LanguageModelV3CallOptions,
-  LanguageModelV3FinishReason,
-  LanguageModelV3StreamPart,
-  LanguageModelV3Usage,
-  SharedV3Warning,
+  LanguageModelV4CallOptions,
+  LanguageModelV4FinishReason,
+  LanguageModelV4StreamPart,
+  LanguageModelV4Usage,
+  SharedV4Warning,
 } from "@ai-sdk/provider";
 import { generateId, ParseResult } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
@@ -18,8 +18,8 @@ import {
 } from "./ollama-responses-processor";
 
 interface StreamState {
-  finishReason: LanguageModelV3FinishReason;
-  usage: LanguageModelV3Usage;
+  finishReason: LanguageModelV4FinishReason;
+  usage: LanguageModelV4Usage;
   responseId: string | null;
   ongoingToolCalls: Record<
     number,
@@ -27,6 +27,7 @@ interface StreamState {
   >;
   hasToolCalls: boolean;
   isFirstChunk: boolean;
+  hasStreamStarted: boolean;
   hasTextStarted: boolean;
   hasReasoningStarted: boolean;
   textEnded: boolean;
@@ -37,18 +38,21 @@ interface StreamState {
 
 export class OllamaStreamProcessor {
   private state: StreamState;
+  private warnings: SharedV4Warning[] = [];
 
   constructor(private config: OllamaConfig) {
     this.state = this.initializeState();
   }
 
   createTransformStream(
-    warnings: SharedV3Warning[],
-    options: LanguageModelV3CallOptions,
+    warnings: SharedV4Warning[],
+    options: LanguageModelV4CallOptions,
   ): TransformStream<
     ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
-    LanguageModelV3StreamPart
+    LanguageModelV4StreamPart
   > {
+    this.warnings = warnings;
+
     return new TransformStream({
       transform: (chunk, controller) => {
         this.processChunk(chunk, controller, options);
@@ -83,6 +87,7 @@ export class OllamaStreamProcessor {
       ongoingToolCalls: {},
       hasToolCalls: false,
       isFirstChunk: true,
+      hasStreamStarted: false,
       hasTextStarted: false,
       hasReasoningStarted: false,
       textEnded: false,
@@ -94,8 +99,8 @@ export class OllamaStreamProcessor {
 
   private processChunk(
     chunk: ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
-    options: LanguageModelV3CallOptions,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
+    options: LanguageModelV4CallOptions,
   ) {
     if (options?.includeRawChunks) {
       controller.enqueue({ type: "raw", rawValue: chunk.rawValue });
@@ -118,7 +123,7 @@ export class OllamaStreamProcessor {
 
   private processResponseValue(
     value: OllamaResponse,
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     // Handle error-like chunks
     if (
@@ -133,6 +138,12 @@ export class OllamaStreamProcessor {
 
     if (this.state.isFirstChunk) {
       this.state.isFirstChunk = false;
+
+      if (!this.state.hasStreamStarted) {
+        this.state.hasStreamStarted = true;
+        controller.enqueue({ type: "stream-start", warnings: this.warnings });
+      }
+
       controller.enqueue({
         type: "response-metadata",
         ...getResponseMetadata(value),
@@ -151,7 +162,7 @@ export class OllamaStreamProcessor {
 
   private handleDoneChunk(
     value: OllamaResponse,
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     this.state.finishReason = mapOllamaFinishReason(value.done_reason);
     this.state.usage = {
@@ -181,7 +192,7 @@ export class OllamaStreamProcessor {
 
   private processDelta(
     delta: OllamaResponse["message"],
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     this.processTextContent(delta, controller);
     this.processThinking(delta, controller);
@@ -190,7 +201,7 @@ export class OllamaStreamProcessor {
 
   private processTextContent(
     delta: OllamaResponse["message"],
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     if (delta?.content != null) {
       if (!this.state.hasTextStarted) {
@@ -207,7 +218,7 @@ export class OllamaStreamProcessor {
 
   private processThinking(
     delta: OllamaResponse["message"],
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     if (delta?.thinking) {
       if (!this.state.hasReasoningStarted) {
@@ -227,7 +238,7 @@ export class OllamaStreamProcessor {
 
   private processToolCalls(
     delta: OllamaResponse["message"],
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     for (const toolCall of delta.tool_calls ?? []) {
       if (toolCall.function?.name == null) {
@@ -248,7 +259,7 @@ export class OllamaStreamProcessor {
 
   private emitToolCall(
     toolCall: NonNullable<OllamaResponse["message"]["tool_calls"]>[0],
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     const id = toolCall.id ?? this.config.generateId?.() ?? generateId();
 
@@ -280,7 +291,7 @@ export class OllamaStreamProcessor {
   }
 
   private finalizeStream(
-    controller: TransformStreamDefaultController<LanguageModelV3StreamPart>,
+    controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
   ) {
     // Ensure any started segments are properly closed
     if (this.state.hasTextStarted && !this.state.textEnded) {
@@ -290,7 +301,7 @@ export class OllamaStreamProcessor {
       controller.enqueue({ type: "reasoning-end", id: this.state.reasoningId });
     }
 
-    const correctedFinishReason: LanguageModelV3FinishReason =
+    const correctedFinishReason: LanguageModelV4FinishReason =
       this.state.hasToolCalls &&
       this.state.finishReason.unified !== "tool-calls"
         ? { unified: "tool-calls", raw: "tool_calls" }

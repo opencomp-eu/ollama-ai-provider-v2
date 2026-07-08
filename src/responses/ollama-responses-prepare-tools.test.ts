@@ -1,7 +1,7 @@
-import { LanguageModelV2FunctionTool } from "@ai-sdk/provider";
+import { LanguageModelV4FunctionTool } from "@ai-sdk/provider";
 import { prepareResponsesTools } from "./ollama-responses-prepare-tools";
 
-const functionTool: LanguageModelV2FunctionTool = {
+const functionTool: LanguageModelV4FunctionTool = {
   type: "function",
   name: "weather",
   description: "Get weather",
@@ -46,7 +46,7 @@ describe("prepareResponsesTools", () => {
     const result = prepareResponsesTools({
       tools: [
         {
-          type: "provider-defined",
+          type: "provider",
           id: "provider.web_search",
           name: "web_search",
           args: {},
