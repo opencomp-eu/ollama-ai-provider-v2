@@ -11,7 +11,7 @@ describe("createOllama", () => {
   it("should return a callable provider", () => {
     const provider = createOllama();
 
-    expect(provider.specificationVersion).toBe("v3");
+    expect(provider.specificationVersion).toBe("v4");
     expect(provider("llama3.2").provider).toBe("ollama.responses");
     expect(provider.chat("llama3.2").provider).toBe("ollama.responses");
     expect(provider.languageModel("llama3.2").provider).toBe("ollama.responses");

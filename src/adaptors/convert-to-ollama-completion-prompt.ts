@@ -1,6 +1,6 @@
 import {
   InvalidPromptError,
-  LanguageModelV3Prompt,
+  LanguageModelV4Prompt,
   UnsupportedFunctionalityError,
 } from "@ai-sdk/provider";
 
@@ -9,7 +9,7 @@ export function convertToOllamaCompletionPrompt({
   user = "user",
   assistant = "assistant",
 }: {
-  prompt: LanguageModelV3Prompt;
+  prompt: LanguageModelV4Prompt;
   user?: string;
   assistant?: string;
 }): {
@@ -41,6 +41,15 @@ export function convertToOllamaCompletionPrompt({
               case "text": {
                 return part.text;
               }
+              case "file": {
+                throw new UnsupportedFunctionalityError({
+                  functionality: "file parts in completion prompts",
+                });
+              }
+              default: {
+                const _exhaustiveCheck: never = part;
+                throw new Error(`Unsupported user part: ${_exhaustiveCheck}`);
+              }
             }
           })
           .filter(Boolean)
@@ -57,10 +66,27 @@ export function convertToOllamaCompletionPrompt({
               case "text": {
                 return part.text;
               }
+              case "reasoning": {
+                return part.text;
+              }
               case "tool-call": {
                 throw new UnsupportedFunctionalityError({
                   functionality: "tool-call messages",
                 });
+              }
+              case "file":
+              case "reasoning-file":
+              case "custom":
+              case "tool-result": {
+                throw new UnsupportedFunctionalityError({
+                  functionality: `${part.type} parts in completion prompts`,
+                });
+              }
+              default: {
+                const _exhaustiveCheck: never = part;
+                throw new Error(
+                  `Unsupported assistant part: ${_exhaustiveCheck}`,
+                );
               }
             }
           })

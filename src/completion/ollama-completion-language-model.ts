@@ -1,14 +1,14 @@
 import {
-  LanguageModelV3,
-  LanguageModelV3CallOptions,
-  LanguageModelV3Content,
-  LanguageModelV3FinishReason,
-  LanguageModelV3ResponseMetadata,
-  LanguageModelV3StreamPart,
-  LanguageModelV3StreamResult,
-  LanguageModelV3Usage,
-  SharedV3Headers,
-  SharedV3Warning,
+  LanguageModelV4,
+  LanguageModelV4CallOptions,
+  LanguageModelV4Content,
+  LanguageModelV4FinishReason,
+  LanguageModelV4ResponseMetadata,
+  LanguageModelV4StreamPart,
+  LanguageModelV4StreamResult,
+  LanguageModelV4Usage,
+  SharedV4Headers,
+  SharedV4Warning,
 } from "@ai-sdk/provider";
 import {
   combineHeaders,
@@ -19,6 +19,7 @@ import {
 } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaCompletionPrompt } from "../adaptors/convert-to-ollama-completion-prompt";
+import { resolveOllamaThinkFlag } from "../adaptors/ollama-v4-helpers";
 import { mapOllamaFinishReason } from "../adaptors/map-ollama-finish-reason";
 import { getResponseMetadata } from "../common/get-response-metadata";
 import { createNdjsonStreamResponseHandler } from "../common/ndjson-stream-handler";
@@ -47,14 +48,12 @@ export type OllamaCompletionProviderOptions = z.infer<
   typeof ollamaCompletionProviderOptions
 >;
 
-export class OllamaCompletionLanguageModel implements LanguageModelV3 {
-  readonly specificationVersion = "v3" as const;
+export class OllamaCompletionLanguageModel implements LanguageModelV4 {
+  readonly specificationVersion = "v4" as const;
 
   readonly modelId: OllamaCompletionModelId;
   readonly settings: OllamaCompletionSettings;
   readonly provider: string;
-  readonly defaultObjectGenerationMode = undefined;
-  readonly supportsImageUrls = false;
 
   private readonly config: OllamaCompletionConfig;
 
@@ -86,8 +85,9 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
     tools,
     toolChoice,
     seed,
-  }: LanguageModelV3CallOptions) {
-    const warnings: SharedV3Warning[] = [];
+    reasoning,
+  }: LanguageModelV4CallOptions) {
+    const warnings: SharedV4Warning[] = [];
 
     if (topK != null) {
       warnings.push({
@@ -123,7 +123,11 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
 
         // Ollama-supported settings:
         user: this.settings.user,
-        think: this.settings.think,
+        think: resolveOllamaThinkFlag({
+          reasoning,
+          ollamaThink: this.settings.think,
+          warnings,
+        }),
 
         // standardized settings:
         max_tokens: maxOutputTokens,
@@ -145,14 +149,14 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
     };
   }
 
-  async doGenerate(options: LanguageModelV3CallOptions): Promise<{
-    content: Array<LanguageModelV3Content>;
-    finishReason: LanguageModelV3FinishReason;
-    usage: LanguageModelV3Usage;
-    warnings: Array<SharedV3Warning>;
+  async doGenerate(options: LanguageModelV4CallOptions): Promise<{
+    content: Array<LanguageModelV4Content>;
+    finishReason: LanguageModelV4FinishReason;
+    usage: LanguageModelV4Usage;
+    warnings: Array<SharedV4Warning>;
     request?: { body?: unknown };
-    response?: LanguageModelV3ResponseMetadata & {
-      headers?: SharedV3Headers;
+    response?: LanguageModelV4ResponseMetadata & {
+      headers?: SharedV4Headers;
       body?: unknown;
     };
   }> {
@@ -213,9 +217,9 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
   }
 
   async doStream(
-    options: LanguageModelV3CallOptions,
+    options: LanguageModelV4CallOptions,
   ): Promise<
-    LanguageModelV3StreamResult & { warnings: Array<SharedV3Warning> }
+    LanguageModelV4StreamResult & { warnings: Array<SharedV4Warning> }
   > {
     const { args, warnings } = this.getArgs(options);
 
@@ -242,7 +246,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
     const { prompt: rawPrompt, ...rawSettings } = args;
 
     let finishReason = "other";
-    const usage: LanguageModelV3Usage = {
+    const usage: LanguageModelV4Usage = {
       inputTokens: {
         total: undefined,
         noCache: undefined,
@@ -256,6 +260,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
       },
     };
     let isFirstChunk = true;
+    let hasStreamStarted = false;
     let textStarted = false;
     const textId = generateId();
 
@@ -263,7 +268,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
       stream: response.pipeThrough(
         new TransformStream<
           ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
-          LanguageModelV3StreamPart
+          LanguageModelV4StreamPart
         >({
           transform(chunk, controller) {
             if (!chunk.success) {
@@ -282,6 +287,11 @@ export class OllamaCompletionLanguageModel implements LanguageModelV3 {
 
             if (isFirstChunk) {
               isFirstChunk = false;
+
+              if (!hasStreamStarted) {
+                hasStreamStarted = true;
+                controller.enqueue({ type: "stream-start", warnings });
+              }
 
               controller.enqueue({
                 type: "response-metadata",

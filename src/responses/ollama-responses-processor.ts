@@ -1,8 +1,8 @@
 import {
-  LanguageModelV3Content,
-  LanguageModelV3FinishReason,
-  LanguageModelV3Usage,
-  SharedV3ProviderMetadata,
+  LanguageModelV4Content,
+  LanguageModelV4FinishReason,
+  LanguageModelV4Usage,
+  SharedV4ProviderMetadata,
 } from "@ai-sdk/provider";
 import { generateId } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
@@ -46,20 +46,20 @@ export class OllamaResponseProcessor {
   constructor(private config: OllamaConfig) {}
 
   processGenerateResponse(response: OllamaResponse): {
-    content: LanguageModelV3Content[];
-    finishReason: LanguageModelV3FinishReason;
-    usage: LanguageModelV3Usage;
-    providerMetadata: SharedV3ProviderMetadata;
+    content: LanguageModelV4Content[];
+    finishReason: LanguageModelV4FinishReason;
+    usage: LanguageModelV4Usage;
+    providerMetadata: SharedV4ProviderMetadata;
   } {
     const content = this.extractContent(response);
     const hasToolCalls = content.some((item) => item.type === "tool-call");
     const rawFinishReason = mapOllamaFinishReason(response.done_reason);
-    const finishReason: LanguageModelV3FinishReason =
+    const finishReason: LanguageModelV4FinishReason =
       hasToolCalls && rawFinishReason.unified !== "tool-calls"
         ? { unified: "tool-calls", raw: "tool_calls" }
         : rawFinishReason;
     const usage = this.extractUsage(response);
-    const providerMetadata: SharedV3ProviderMetadata = { ollama: {} };
+    const providerMetadata: SharedV4ProviderMetadata = { ollama: {} };
 
     return {
       content,
@@ -69,8 +69,8 @@ export class OllamaResponseProcessor {
     };
   }
 
-  private extractContent(response: OllamaResponse): LanguageModelV3Content[] {
-    const content: LanguageModelV3Content[] = [];
+  private extractContent(response: OllamaResponse): LanguageModelV4Content[] {
+    const content: LanguageModelV4Content[] = [];
 
     // Add text content
     const text = response.message.content;
@@ -103,7 +103,7 @@ export class OllamaResponseProcessor {
     return content;
   }
 
-  private extractUsage(response: OllamaResponse): LanguageModelV3Usage {
+  private extractUsage(response: OllamaResponse): LanguageModelV4Usage {
     return {
       inputTokens: {
         total: response.prompt_eval_count ?? 0,

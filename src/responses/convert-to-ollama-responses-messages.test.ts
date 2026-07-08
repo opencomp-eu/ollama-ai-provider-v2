@@ -39,7 +39,7 @@ describe("convertToOllamaResponsesMessages", () => {
             {
               type: "file",
               mediaType: "image/png",
-              data: "base64data",
+              data: { type: "data", data: "base64data" },
             },
           ],
         },
@@ -132,7 +132,7 @@ describe("convertToOllamaResponsesMessages", () => {
               {
                 type: "file",
                 mediaType: "audio/mp3",
-                data: "data",
+                data: { type: "data", data: "data" },
               },
             ],
           },

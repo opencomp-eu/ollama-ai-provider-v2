@@ -1,9 +1,8 @@
 import {
-  EmbeddingModelV3,
+  EmbeddingModelV4,
+  EmbeddingModelV4CallOptions,
+  EmbeddingModelV4Result,
   TooManyEmbeddingValuesForCallError,
-  SharedV3Warning,
-  SharedV3Headers,
-  SharedV3ProviderMetadata,
 } from "@ai-sdk/provider";
 import {
   combineHeaders,
@@ -29,8 +28,8 @@ export type OllamaEmbeddingProviderOptions = z.infer<
   typeof ollamaEmbeddingProviderOptions
 >;
 
-export class OllamaEmbeddingModel implements EmbeddingModelV3 {
-  readonly specificationVersion = "v3" as const;
+export class OllamaEmbeddingModel implements EmbeddingModelV4 {
+  readonly specificationVersion = "v4" as const;
   readonly modelId: OllamaEmbeddingModelId;
   readonly provider: string;
   readonly maxEmbeddingsPerCall: number | undefined;
@@ -52,39 +51,11 @@ export class OllamaEmbeddingModel implements EmbeddingModelV3 {
     this.supportsParallelCalls = settings.supportsParallelCalls ?? true;
   }
 
-  private getArgs({ values }: { values: Array<string> }) {
-    return {
-      // model id:
-      model: this.modelId,
-      input: values,
+  async doEmbed(
+    options: EmbeddingModelV4CallOptions,
+  ): Promise<EmbeddingModelV4Result> {
+    const { values, headers, abortSignal, providerOptions } = options;
 
-      // advanced parameters:
-      dimensions: this.settings.dimensions,
-      truncate: this.settings.truncate,
-      keep_alive: this.settings.keepAlive,
-    };
-  }
-
-  async doEmbed({
-    values,
-    headers,
-    abortSignal,
-    providerOptions,
-  }: {
-    values: Array<string>;
-    headers?: Record<string, string | undefined>;
-    abortSignal?: AbortSignal;
-    providerOptions?: Record<string, Record<string, unknown>>;
-  }): Promise<{
-    embeddings: Array<Array<number>>;
-    usage?: { tokens: number };
-    providerMetadata?: SharedV3ProviderMetadata;
-    response?: {
-      headers?: SharedV3Headers;
-      body?: unknown;
-    };
-    warnings: Array<SharedV3Warning>;
-  }> {
     if (
       this.maxEmbeddingsPerCall &&
       values.length > this.maxEmbeddingsPerCall

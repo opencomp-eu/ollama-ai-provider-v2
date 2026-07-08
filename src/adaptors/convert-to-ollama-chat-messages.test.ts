@@ -58,7 +58,7 @@ describe("convertToOllamaChatMessages", () => {
             {
               type: "file",
               mediaType: "image/png",
-              data: "base64data",
+              data: { type: "data", data: "base64data" },
             },
           ],
         },

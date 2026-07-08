@@ -20,7 +20,7 @@ describe("OllamaResponsesLanguageModel", () => {
 
   describe("Model Properties", () => {
     it("should have correct specification version", () => {
-      expect(model.specificationVersion).toBe("v3");
+      expect(model.specificationVersion).toBe("v4");
     });
 
     it("should have correct model ID", () => {
@@ -208,6 +208,39 @@ describe("OllamaResponsesLanguageModel", () => {
 
         expect(result.warnings).toEqual([]);
       });
+
+      it("should map reasoning none to think false", async () => {
+        prepareJsonResponse(server);
+
+        await model.doGenerate({
+          prompt: TEST_PROMPT,
+          reasoning: "none",
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchObject({
+          think: false,
+        });
+      });
+
+      it("should map reasoning high to think true with warning", async () => {
+        prepareJsonResponse(server);
+
+        const result = await model.doGenerate({
+          prompt: TEST_PROMPT,
+          reasoning: "high",
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchObject({
+          think: true,
+        });
+        expect(result.warnings).toEqual([
+          {
+            type: "other",
+            message:
+              'Ollama only supports on/off thinking; reasoning effort "high" was mapped to think=true',
+          },
+        ]);
+      });
     });
 
     describe("Error Handling", () => {
@@ -234,6 +267,10 @@ describe("OllamaResponsesLanguageModel", () => {
       const parts = await convertReadableStreamToArray(result.stream);
 
       expect(parts[0]).toMatchObject({
+        type: "stream-start",
+        warnings: [],
+      });
+      expect(parts[1]).toMatchObject({
         type: "response-metadata",
         modelId: TEST_MODEL_ID,
         timestamp: new Date("2024-01-01T00:00:00.000Z"),

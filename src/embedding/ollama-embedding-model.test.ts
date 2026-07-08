@@ -1,5 +1,5 @@
 import {
-  EmbeddingModelV3Embedding,
+  EmbeddingModelV4Embedding,
   TooManyEmbeddingValuesForCallError,
 } from "@ai-sdk/provider";
 import { createTestServer } from "../test-utils/test-server";
@@ -24,7 +24,7 @@ describe("doEmbed", () => {
     usage = { prompt_eval_count: 8 },
     headers,
   }: {
-    embeddings?: EmbeddingModelV3Embedding[];
+    embeddings?: EmbeddingModelV4Embedding[];
     usage?: { prompt_eval_count: number };
     headers?: Record<string, string>;
   } = {}) {
