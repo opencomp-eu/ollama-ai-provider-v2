@@ -222,7 +222,7 @@ describe("OllamaResponsesLanguageModel", () => {
         });
       });
 
-      it("should map reasoning high to think true with warning", async () => {
+      it("should map reasoning high to think high", async () => {
         prepareJsonResponse(server);
 
         const result = await model.doGenerate({
@@ -231,13 +231,45 @@ describe("OllamaResponsesLanguageModel", () => {
         });
 
         expect(await server.calls[0].requestBodyJson).toMatchObject({
-          think: true,
+          think: "high",
+        });
+        expect(result.warnings).toEqual([]);
+      });
+
+      it("should pass string think levels from provider options", async () => {
+        prepareJsonResponse(server);
+
+        await model.doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            ollama: {
+              think: "max",
+            },
+          },
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchObject({
+          think: "max",
+        });
+      });
+
+      it("should map reasoning xhigh to think max with compatibility warning", async () => {
+        prepareJsonResponse(server);
+
+        const result = await model.doGenerate({
+          prompt: TEST_PROMPT,
+          reasoning: "xhigh",
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchObject({
+          think: "max",
         });
         expect(result.warnings).toEqual([
           {
-            type: "other",
-            message:
-              'Ollama only supports on/off thinking; reasoning effort "high" was mapped to think=true',
+            type: "compatibility",
+            feature: "reasoning",
+            details:
+              'reasoning "xhigh" is not directly supported by this model. mapped to effort "max".',
           },
         ]);
       });

@@ -9,29 +9,41 @@ import {
   convertInlineFileDataToUint8Array,
   convertUint8ArrayToBase64,
   isCustomReasoning,
+  mapReasoningToProviderEffort,
 } from "@ai-sdk/provider-utils";
+import { OllamaThink, OllamaThinkLevel } from "../common/ollama-think";
 
-export function resolveOllamaThinkFlag({
+export function resolveOllamaThink({
   reasoning,
   ollamaThink,
   warnings,
 }: {
   reasoning?: LanguageModelV4CallOptions["reasoning"];
-  ollamaThink?: boolean;
+  ollamaThink?: OllamaThink;
   warnings: SharedV4Warning[];
-}): boolean {
+}): OllamaThink {
   if (ollamaThink !== undefined) {
     return ollamaThink;
   }
 
   if (isCustomReasoning(reasoning)) {
-    if (reasoning !== "none") {
-      warnings.push({
-        type: "other",
-        message: `Ollama only supports on/off thinking; reasoning effort "${reasoning}" was mapped to think=true`,
-      });
+    if (reasoning === "none") {
+      return false;
     }
-    return reasoning !== "none";
+
+    return (
+      mapReasoningToProviderEffort<OllamaThinkLevel>({
+        reasoning,
+        effortMap: {
+          minimal: "low",
+          low: "low",
+          medium: "medium",
+          high: "high",
+          xhigh: "max",
+        },
+        warnings,
+      }) ?? false
+    );
   }
 
   return false;

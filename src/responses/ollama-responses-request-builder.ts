@@ -1,7 +1,8 @@
 import { LanguageModelV4CallOptions, SharedV4Warning } from "@ai-sdk/provider";
 import { parseProviderOptions } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
-import { resolveOllamaThinkFlag } from "../adaptors/ollama-v4-helpers";
+import { resolveOllamaThink } from "../adaptors/ollama-v4-helpers";
+import { OllamaThink } from "../common/ollama-think";
 import { convertToOllamaChatMessages } from "../adaptors/convert-to-ollama-chat-messages";
 import {
   OllamaChatModelId,
@@ -42,7 +43,7 @@ interface RequestBuilderResult {
     max_output_tokens?: number;
     format?: unknown;
     user?: string;
-    think?: boolean;
+    think?: OllamaThink;
     tools?: unknown;
     tool_choice?: unknown;
   };
@@ -198,7 +199,7 @@ export class OllamaRequestBuilder {
         format: responseFormat.schema != null ? responseFormat.schema : "json",
       }),
 
-      think: resolveOllamaThinkFlag({
+      think: resolveOllamaThink({
         reasoning,
         ollamaThink: ollamaOptions?.think,
         warnings,

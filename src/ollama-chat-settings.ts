@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { ollamaThinkSchema } from "./common/ollama-think";
 
 // https://platform.ollama.com/docs/models
 export type OllamaChatModelId =
@@ -213,13 +214,15 @@ export type OllamaChatModelId =
 
 export const ollamaProviderOptions = z.object({
   /**
-   * Enable or disable the model's thinking process. When enabled, the output will separate
+   * Control the model's thinking process. When enabled, the output will separate
    * the model's thinking from the model's output. When disabled, the model will not think
    * and directly output the content.
    *
+   * Accepts a boolean or a thinking level: `"low"`, `"medium"`, `"high"`, or `"max"`.
+   *
    * Only supported by certain models like DeepSeek R1 and Qwen 3.
    */
-  think: z.boolean().optional(),
+  think: ollamaThinkSchema.optional(),
   options: z
     .object({
       num_ctx: z.number().optional(),

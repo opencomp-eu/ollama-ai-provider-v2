@@ -19,7 +19,8 @@ import {
 } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { convertToOllamaCompletionPrompt } from "../adaptors/convert-to-ollama-completion-prompt";
-import { resolveOllamaThinkFlag } from "../adaptors/ollama-v4-helpers";
+import { resolveOllamaThink } from "../adaptors/ollama-v4-helpers";
+import { ollamaThinkSchema } from "../common/ollama-think";
 import { mapOllamaFinishReason } from "../adaptors/map-ollama-finish-reason";
 import { getResponseMetadata } from "../common/get-response-metadata";
 import { createNdjsonStreamResponseHandler } from "../common/ndjson-stream-handler";
@@ -31,7 +32,7 @@ import { ollamaFailedResponseHandler } from "./ollama-error";
 
 // Completion-specific provider options schema
 const ollamaCompletionProviderOptions = z.object({
-  think: z.boolean().optional(),
+  think: ollamaThinkSchema.optional(),
   user: z.string().optional(),
   suffix: z.string().optional(),
   echo: z.boolean().optional(),
@@ -123,7 +124,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV4 {
 
         // Ollama-supported settings:
         user: this.settings.user,
-        think: resolveOllamaThinkFlag({
+        think: resolveOllamaThink({
           reasoning,
           ollamaThink: this.settings.think,
           warnings,

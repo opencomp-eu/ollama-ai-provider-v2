@@ -1,3 +1,4 @@
+export type { OllamaThink, OllamaThinkLevel } from "./common/ollama-think";
 export { createOllama, ollama } from "./ollama-provider";
 export type { OllamaProvider, OllamaProviderSettings } from "./ollama-provider";
 export type { OllamaEmbeddingProviderOptions } from "./embedding/ollama-embedding-model";
