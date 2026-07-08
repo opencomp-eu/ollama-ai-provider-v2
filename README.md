@@ -55,12 +55,15 @@ for await (const chunk of textStream) {
 
 ### Tool Calling Support
 
+AI SDK 7 defaults to a single generation step. When the model calls a tool, that step ends with empty `text` and populated `toolCalls`. Set `stopWhen` to allow the model to execute tools and then answer.
+
 ```typescript
-import { generateText, tool } from 'ai';
+import { generateText, tool, stepCountIs } from 'ai';
 import { z } from 'zod';
 
-const { text, toolCalls } = await generateText({
+const { text, toolCalls, toolResults } = await generateText({
   model: ollama('llama3.2'),
+  stopWhen: stepCountIs(5), // allow tool call + follow-up answer
   prompt: 'What is the weather like in San Francisco?',
   tools: {
     getWeather: tool({
