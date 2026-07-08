@@ -7,6 +7,8 @@ Use Ollama with the Vercel AI SDK, implementing the official Ollama API. This pr
 [![Node.js](https://img.shields.io/badge/Node.js-22+-green.svg)](https://nodejs.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 
+> **Support this project** — Maintained in spare time and free to use under Apache-2.0. If you value this plugin and appreciate it, a [donation](https://buymeacoffee.com/nordwestt) is appreciated and helps keep it updated with new AI SDK releases.
+
 ## Why Choose Ollama Provider V2?
 
 - ✅ **Minimal Dependencies** - Lean codebase with just 2 core dependencies
