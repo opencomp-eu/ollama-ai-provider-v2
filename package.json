@@ -42,7 +42,7 @@
     "eslint": "^10.7.0",
     "globals": "^17.7.0",
     "msw": "^2.12.14",
-    "prettier": "3.9.1",
+    "prettier": "3.9.5",
     "tsup": "^8",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.63.0",
