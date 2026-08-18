@@ -40,7 +40,7 @@
     "@vercel/ai-tsconfig": "./tsconfig",
     "ai": "^7.0.66",
     "eslint": "^10.8.1",
-    "globals": "^17.8.0",
+    "globals": "^17.11.0",
     "msw": "^2.12.14",
     "prettier": "3.9.6",
     "tsup": "^8",
