@@ -13,7 +13,7 @@ importers:
         version: 4.0.4
       '@ai-sdk/provider-utils':
         specifier: ^5.0.14
-        version: 5.0.14(zod@4.4.3)
+        version: 5.0.14(zod@4.5.4)
     devDependencies:
       '@edge-runtime/vm':
         specifier: ^5.0.0
@@ -29,7 +29,7 @@ importers:
         version: link:tsconfig
       ai:
         specifier: ^7.0.66
-        version: 7.0.66(zod@4.4.3)
+        version: 7.0.66(zod@4.5.4)
       eslint:
         specifier: ^10.8.1
         version: 10.8.1
@@ -58,8 +58,8 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(msw@2.12.14(@types/node@26.2.0)(typescript@6.0.3))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.27.0))
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.5.4
+        version: 4.5.4
 
 packages:
 
@@ -1597,34 +1597,34 @@ packages:
     resolution: {integrity: sha512-U/PBtDf35ff0D8X8D0jfdzHYEPFxAI7jJlxZXwCSez5M3190m+QobIfh+sWDWSHMCWWJN2AWamkegn6vr6YBTw==}
     engines: {node: '>=18'}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.52(zod@4.4.3)':
+  '@ai-sdk/gateway@4.0.52(zod@4.5.4)':
     dependencies:
       '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.27(zod@4.4.3)
+      '@ai-sdk/provider-utils': 5.0.27(zod@4.5.4)
       '@vercel/oidc': 3.2.0
-      zod: 4.4.3
+      zod: 4.5.4
 
-  '@ai-sdk/provider-utils@5.0.14(zod@4.4.3)':
+  '@ai-sdk/provider-utils@5.0.14(zod@4.5.4)':
     dependencies:
       '@ai-sdk/provider': 4.0.4
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
-      zod: 4.4.3
+      zod: 4.5.4
 
-  '@ai-sdk/provider-utils@5.0.27(zod@4.4.3)':
+  '@ai-sdk/provider-utils@5.0.27(zod@4.5.4)':
     dependencies:
       '@ai-sdk/provider': 4.0.7
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.1
       undici: 7.29.0
-      zod: 4.4.3
+      zod: 4.5.4
 
   '@ai-sdk/provider@4.0.4':
     dependencies:
@@ -2121,12 +2121,12 @@ snapshots:
 
   acorn@8.18.0: {}
 
-  ai@7.0.66(zod@4.4.3):
+  ai@7.0.66(zod@4.5.4):
     dependencies:
-      '@ai-sdk/gateway': 4.0.52(zod@4.4.3)
+      '@ai-sdk/gateway': 4.0.52(zod@4.5.4)
       '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.27(zod@4.4.3)
-      zod: 4.4.3
+      '@ai-sdk/provider-utils': 5.0.27(zod@4.5.4)
+      zod: 4.5.4
 
   ajv@6.15.0:
     dependencies:
@@ -2925,4 +2925,4 @@ snapshots:
 
   yoctocolors-cjs@2.1.3: {}
 
-  zod@4.4.3: {}
+  zod@4.5.4: {}
