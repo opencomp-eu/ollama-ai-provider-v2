@@ -219,5 +219,28 @@ describe("OllamaCompletionLanguageModel", () => {
         expect.arrayContaining([{ type: "error", error: "model overloaded" }]),
       );
     });
+
+    it.each(["\n", ""])(
+      "should emit error-only stream chunks with suffix %j",
+      async (suffix) => {
+        prepareTextStreamResponse(server, {
+          chunks: [
+            `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"response":"Hello","context":[]}\n`,
+            '{"error":"model ',
+            `overloaded"}${suffix}`,
+          ],
+        });
+
+        const result = await model.doStream({ prompt: TEST_PROMPT });
+        const parts = await convertReadableStreamToArray(result.stream);
+
+        expect(parts).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: "text-delta", delta: "Hello" }),
+            { type: "error", error: "model overloaded" },
+          ]),
+        );
+      },
+    );
   });
 });

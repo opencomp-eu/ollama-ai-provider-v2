@@ -6,6 +6,57 @@ const schema = z.object({
 });
 
 describe("createNdjsonStreamResponseHandler", () => {
+  it.each([
+    { name: "newline-terminated", chunks: ['{"error":"model overloaded"}\n'] },
+    { name: "unterminated", chunks: ['{"error":"model overloaded"}'] },
+    {
+      name: "chunked newline-terminated",
+      chunks: ['{"error":"model ', 'overloaded"}\n'],
+    },
+    {
+      name: "chunked unterminated",
+      chunks: ['{"error":"model ', 'overloaded"}'],
+    },
+  ])("should pass through $name error-only lines", async ({ chunks }) => {
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"value":"first"}\n'));
+        for (const chunk of chunks) {
+          controller.enqueue(new TextEncoder().encode(chunk));
+        }
+        controller.close();
+      },
+    });
+
+    const handler = createNdjsonStreamResponseHandler(schema);
+    const { value: stream } = await handler({
+      response: new Response(body),
+      url: "http://test",
+      requestBodyValues: {},
+    });
+
+    const results = [];
+    const reader = stream.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      results.push(value);
+    }
+
+    expect(results).toEqual([
+      {
+        success: true,
+        value: { value: "first" },
+        rawValue: { value: "first" },
+      },
+      {
+        success: true,
+        value: { error: "model overloaded" },
+        rawValue: { error: "model overloaded" },
+      },
+    ]);
+  });
+
   it("should parse multiple NDJSON lines", async () => {
     const body = new ReadableStream({
       start(controller) {

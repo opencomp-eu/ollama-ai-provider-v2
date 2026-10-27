@@ -10,6 +10,7 @@ import { generateId, ParseResult } from "@ai-sdk/provider-utils";
 import { z } from "zod/v4";
 import { mapOllamaFinishReason } from "../adaptors/map-ollama-finish-reason";
 import { getResponseMetadata } from "../common/get-response-metadata";
+import { OllamaStreamResponse } from "../common/ndjson-stream-handler";
 import { OllamaConfig } from "../common/ollama-config";
 import {
   baseOllamaResponseSchema,
@@ -48,7 +49,7 @@ export class OllamaStreamProcessor {
     warnings: SharedV4Warning[],
     options: LanguageModelV4CallOptions,
   ): TransformStream<
-    ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
+    ParseResult<OllamaStreamResponse<z.infer<typeof baseOllamaResponseSchema>>>,
     LanguageModelV4StreamPart
   > {
     this.warnings = warnings;
@@ -98,7 +99,9 @@ export class OllamaStreamProcessor {
   }
 
   private processChunk(
-    chunk: ParseResult<z.infer<typeof baseOllamaResponseSchema>>,
+    chunk: ParseResult<
+      OllamaStreamResponse<z.infer<typeof baseOllamaResponseSchema>>
+    >,
     controller: TransformStreamDefaultController<LanguageModelV4StreamPart>,
     options: LanguageModelV4CallOptions,
   ) {
