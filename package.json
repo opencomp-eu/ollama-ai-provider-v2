@@ -48,7 +48,7 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.2",
     "vitest": "^5.1.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "ai": "^7.0.0",
