@@ -5,13 +5,20 @@ import {
 } from "@ai-sdk/provider-utils";
 import { z } from "zod";
 
+const ollamaStreamErrorSchema = z.object({ error: z.string() });
+
+export type OllamaStreamResponse<T> =
+  T | z.infer<typeof ollamaStreamErrorSchema>;
+
 /**
  * Creates a response handler for NDJSON (Newline-delimited JSON) streams.
  * This replaces the removed createJsonStreamResponseHandler from @ai-sdk/provider-utils.
  */
 export function createNdjsonStreamResponseHandler<T>(
   schema: z.ZodSchema<T>,
-): ResponseHandler<ReadableStream<ParseResult<T>>> {
+): ResponseHandler<ReadableStream<ParseResult<OllamaStreamResponse<T>>>> {
+  const streamSchema = z.union([schema, ollamaStreamErrorSchema]);
+
   return async ({ response }) => {
     const responseHeaders = extractResponseHeaders(response);
 
@@ -23,7 +30,7 @@ export function createNdjsonStreamResponseHandler<T>(
     const decoder = new TextDecoder();
     let buffer = "";
 
-    const stream = new ReadableStream<ParseResult<T>>({
+    const stream = new ReadableStream<ParseResult<OllamaStreamResponse<T>>>({
       async pull(controller) {
         while (true) {
           const { done, value } = await reader.read();
@@ -33,7 +40,7 @@ export function createNdjsonStreamResponseHandler<T>(
             if (buffer.trim()) {
               try {
                 const parsed = JSON.parse(buffer.trim());
-                const validated = schema.parse(parsed);
+                const validated = streamSchema.parse(parsed);
                 controller.enqueue({
                   success: true,
                   value: validated,
@@ -56,7 +63,7 @@ export function createNdjsonStreamResponseHandler<T>(
             if (trimmedLine) {
               try {
                 const parsed = JSON.parse(trimmedLine);
-                const validated = schema.parse(parsed);
+                const validated = streamSchema.parse(parsed);
                 controller.enqueue({
                   success: true,
                   value: validated,

@@ -257,6 +257,33 @@ describe("OllamaResponsesLanguageModel", () => {
   });
 
   describe("doStream", () => {
+    it.each(["\n", ""])(
+      "should emit error-only stream chunks with suffix %j",
+      async (suffix) => {
+        prepareStreamResponse(server, {
+          chunks: [
+            `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"message":{"role":"assistant","content":"Hello"}}\n`,
+            '{"error":"model ',
+            `overloaded"}${suffix}`,
+          ],
+        });
+
+        const result = await model.doStream({ prompt: TEST_PROMPT });
+        const parts = await convertReadableStreamToArray(result.stream);
+
+        expect(parts).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: "text-delta", delta: "Hello" }),
+            { type: "error", error: "model overloaded" },
+            expect.objectContaining({
+              type: "finish",
+              finishReason: { unified: "error", raw: undefined },
+            }),
+          ]),
+        );
+      },
+    );
+
     it("should stream text parts", async () => {
       prepareStreamResponse(server);
 
