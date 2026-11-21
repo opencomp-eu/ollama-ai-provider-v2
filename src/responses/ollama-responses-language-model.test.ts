@@ -222,6 +222,37 @@ describe("OllamaResponsesLanguageModel", () => {
         });
       });
 
+      it("should send assistant reasoning history as thinking without warnings", async () => {
+        prepareJsonResponse(server);
+
+        const result = await model.doGenerate({
+          prompt: [
+            { role: "user", content: [{ type: "text", text: "hi" }] },
+            {
+              role: "assistant",
+              content: [
+                { type: "reasoning", text: "The user said hi." },
+                { type: "text", text: "Hello!" },
+              ],
+            },
+            { role: "user", content: [{ type: "text", text: "again" }] },
+          ],
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchObject({
+          messages: [
+            { role: "user", content: "hi" },
+            {
+              role: "assistant",
+              content: "Hello!",
+              thinking: "The user said hi.",
+            },
+            { role: "user", content: "again" },
+          ],
+        });
+        expect(result.warnings).toEqual([]);
+      });
+
       it("should map reasoning high to think true with warning", async () => {
         prepareJsonResponse(server);
 
