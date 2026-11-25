@@ -72,8 +72,21 @@ export function fileDataToDataUri(
 }
 
 export function extractOllamaFileData(
-  data: SharedV4FileData,
+  data: SharedV4FileData | URL | Uint8Array | string,
 ): URL | Uint8Array | string {
+  // Not every caller hands over the tagged SharedV4FileData shape: hosts running
+  // an older @ai-sdk/provider (OpenCode, for one) pass the payload directly, and
+  // the tagged switch below then falls through to its `never` branch and throws
+  // "Unsupported file data type: <the base64 itself>". Every downstream helper
+  // here already accepts the untagged union, so hand it straight back.
+  if (
+    typeof data === "string" ||
+    data instanceof URL ||
+    data instanceof Uint8Array
+  ) {
+    return data;
+  }
+
   switch (data.type) {
     case "data":
       return data.data;
