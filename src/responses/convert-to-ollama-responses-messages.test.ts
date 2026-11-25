@@ -95,6 +95,23 @@ describe("convertToOllamaResponsesMessages", () => {
     ]);
   });
 
+  it("should not warn about assistant reasoning parts", () => {
+    const result = convertToOllamaResponsesMessages({
+      prompt: [
+        {
+          role: "assistant",
+          content: [
+            { type: "reasoning", text: "The user said hi." },
+            { type: "text", text: "Hello!" },
+          ],
+        },
+      ],
+      systemMessageMode: "system",
+    });
+
+    expect(result.warnings).toEqual([]);
+  });
+
   it("should convert tool results", () => {
     const result = convertToOllamaResponsesMessages({
       prompt: [

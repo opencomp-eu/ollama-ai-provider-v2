@@ -129,11 +129,8 @@ export function convertToOllamaResponsesMessages({
               break;
             }
             case "reasoning": {
-              warnings.push({
-                type: "other",
-                message:
-                  "reasoning parts in assistant messages are not supported for Ollama responses",
-              });
+              // Forwarded as `thinking` by convertToOllamaChatMessages, which
+              // builds the request body; this converter only collects warnings.
               break;
             }
             case "file":
