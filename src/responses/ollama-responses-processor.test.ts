@@ -44,6 +44,29 @@ describe("OllamaResponseProcessor", () => {
     });
   });
 
+  it("should report cached prompt tokens as cacheRead", () => {
+    const result = processor.processGenerateResponse({
+      model: "llama2",
+      created_at: "2024-01-01T00:00:00.000Z",
+      done: true,
+      done_reason: "stop",
+      message: {
+        role: "assistant",
+        content: "Hello!",
+      },
+      prompt_eval_count: 120,
+      prompt_eval_cached_count: 100,
+      eval_count: 5,
+    });
+
+    expect(result.usage.inputTokens).toEqual({
+      total: 120,
+      noCache: undefined,
+      cacheRead: 100,
+      cacheWrite: undefined,
+    });
+  });
+
   it("should process thinking and tool calls", () => {
     const result = processor.processGenerateResponse({
       model: "llama2",

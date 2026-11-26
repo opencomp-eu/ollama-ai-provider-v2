@@ -196,7 +196,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV4 {
         inputTokens: {
           total: typedResponse.prompt_eval_count ?? 0,
           noCache: undefined,
-          cacheRead: undefined,
+          cacheRead: typedResponse.prompt_eval_cached_count,
           cacheWrite: undefined,
         },
         outputTokens: {
@@ -356,5 +356,6 @@ const baseOllamaResponseSchema = z.object({
   total_duration: z.number().optional(),
 
   prompt_eval_count: z.number().optional(),
+  prompt_eval_cached_count: z.number().optional(),
   prompt_eval_duration: z.number().optional(),
 });

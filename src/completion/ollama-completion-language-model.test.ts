@@ -1,6 +1,7 @@
 import { convertReadableStreamToArray } from "../test-utils/test-server";
 import { OllamaCompletionLanguageModel } from "./ollama-completion-language-model";
 import {
+  COMPLETION_API_URL,
   TEST_MODEL_ID,
   TEST_PROMPT,
   createMockServer,
@@ -66,6 +67,31 @@ describe("OllamaCompletionLanguageModel", () => {
           text: undefined,
           reasoning: undefined,
         },
+      });
+    });
+
+    it("should report cached prompt tokens as cacheRead", async () => {
+      server.urls[COMPLETION_API_URL].response = {
+        type: "json-value",
+        body: {
+          model: TEST_MODEL_ID,
+          created_at: "2024-01-01T00:00:00.000Z",
+          done: true,
+          response: "Hello",
+          context: [],
+          prompt_eval_count: 120,
+          prompt_eval_cached_count: 100,
+          eval_count: 5,
+        },
+      };
+
+      const result = await model.doGenerate({
+        prompt: TEST_PROMPT,
+      });
+
+      expect(result.usage.inputTokens).toMatchObject({
+        total: 120,
+        cacheRead: 100,
       });
     });
 
