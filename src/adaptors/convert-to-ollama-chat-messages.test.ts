@@ -133,6 +133,7 @@ describe("convertToOllamaChatMessages", () => {
       {
         role: "tool",
         tool_call_id: "call_1",
+        tool_name: "weather",
         content: '{"temp":72}',
       },
     ]);
