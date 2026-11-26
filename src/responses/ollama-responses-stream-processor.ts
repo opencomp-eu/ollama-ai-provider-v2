@@ -169,7 +169,7 @@ export class OllamaStreamProcessor {
       inputTokens: {
         total: value.prompt_eval_count || 0,
         noCache: undefined,
-        cacheRead: undefined,
+        cacheRead: value.prompt_eval_cached_count,
         cacheWrite: undefined,
       },
       outputTokens: {

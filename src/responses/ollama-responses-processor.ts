@@ -36,6 +36,7 @@ export const baseOllamaResponseSchema = z.object({
   eval_duration: z.number().optional(),
   load_duration: z.number().optional(),
   prompt_eval_count: z.number().optional(),
+  prompt_eval_cached_count: z.number().optional(),
   prompt_eval_duration: z.number().optional(),
   total_duration: z.number().optional(),
 });
@@ -108,7 +109,7 @@ export class OllamaResponseProcessor {
       inputTokens: {
         total: response.prompt_eval_count ?? 0,
         noCache: undefined,
-        cacheRead: undefined,
+        cacheRead: response.prompt_eval_cached_count,
         cacheWrite: undefined,
       },
       outputTokens: {

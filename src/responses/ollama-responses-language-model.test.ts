@@ -336,6 +336,25 @@ describe("OllamaResponsesLanguageModel", () => {
       expect(result.request?.body).toBeDefined();
     });
 
+    it("should report cached prompt tokens from the final chunk", async () => {
+      prepareStreamResponse(server, {
+        chunks: [
+          `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"message":{"role":"assistant","content":"Hello"}}`,
+          `\n{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":true,"done_reason":"stop","message":{"role":"assistant","content":""},"eval_count":5,"prompt_eval_count":120,"prompt_eval_cached_count":100}`,
+        ],
+      });
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+
+      expect(parts.find((part) => part.type === "finish")).toMatchObject({
+        usage: { inputTokens: { total: 120, cacheRead: 100 } },
+      });
+    });
+
     it("should stream reasoning parts", async () => {
       prepareReasoningStreamResponse(server);
 
