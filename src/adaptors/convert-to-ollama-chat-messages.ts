@@ -133,6 +133,7 @@ export function convertToOllamaChatMessages({
               messages.push({
                 role: "tool",
                 tool_call_id: toolResponse.toolCallId,
+                tool_name: toolResponse.toolName,
                 content: formatOllamaToolResultOutput(toolResponse.output),
               });
               break;

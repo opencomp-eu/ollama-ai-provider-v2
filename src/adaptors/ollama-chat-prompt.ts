@@ -65,6 +65,8 @@ export interface ChatCompletionToolMessage {
   role: "tool";
   content: string;
   tool_call_id: string;
+  /** Name of the tool that produced this result (Ollama `tool_name`). */
+  tool_name?: string;
 }
 
 /**
