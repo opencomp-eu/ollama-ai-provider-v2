@@ -1,6 +1,7 @@
 import { convertReadableStreamToArray } from "../test-utils/test-server";
 import { OllamaCompletionLanguageModel } from "./ollama-completion-language-model";
 import {
+  COMPLETION_API_URL,
   TEST_MODEL_ID,
   TEST_PROMPT,
   createMockServer,
@@ -67,6 +68,28 @@ describe("OllamaCompletionLanguageModel", () => {
           reasoning: undefined,
         },
       });
+    });
+
+    it("should map done_reason to the finish reason", async () => {
+      server.urls[COMPLETION_API_URL].response = {
+        type: "json-value",
+        body: {
+          model: TEST_MODEL_ID,
+          created_at: "2024-01-01T00:00:00.000Z",
+          done: true,
+          done_reason: "length",
+          response: "Hello",
+          context: [],
+          prompt_eval_count: 3,
+          eval_count: 1,
+        },
+      };
+
+      const result = await model.doGenerate({
+        prompt: TEST_PROMPT,
+      });
+
+      expect(result.finishReason).toEqual({ raw: "length", unified: "length" });
     });
 
     it("should pass model and prompt in request body", async () => {
@@ -178,6 +201,43 @@ describe("OllamaCompletionLanguageModel", () => {
         ]),
       );
       expect(result.request?.body).toBeDefined();
+    });
+
+    it("should report usage from the final chunk", async () => {
+      prepareTextStreamResponse(server);
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+      const finish = parts.find((part) => part.type === "finish");
+
+      expect(finish).toMatchObject({
+        usage: {
+          inputTokens: { total: 10 },
+          outputTokens: { total: 5 },
+        },
+      });
+    });
+
+    it("should map done_reason to the finish reason", async () => {
+      prepareTextStreamResponse(server, {
+        chunks: [
+          `{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":false,"response":"Hello","context":[]}`,
+          `\n{"model":"${TEST_MODEL_ID}","created_at":"2024-01-01T00:00:00.000Z","done":true,"done_reason":"length","response":"","context":[],"eval_count":1,"prompt_eval_count":3}`,
+        ],
+      });
+
+      const result = await model.doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const parts = await convertReadableStreamToArray(result.stream);
+
+      expect(parts.find((part) => part.type === "finish")).toMatchObject({
+        finishReason: { raw: "length", unified: "length" },
+      });
     });
 
     it("should pass stream: true in request body", async () => {

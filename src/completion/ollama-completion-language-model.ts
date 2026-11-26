@@ -205,7 +205,7 @@ export class OllamaCompletionLanguageModel implements LanguageModelV4 {
           reasoning: undefined,
         },
       },
-      finishReason: mapOllamaFinishReason("stop"),
+      finishReason: mapOllamaFinishReason(typedResponse.done_reason ?? "stop"),
       request: { body: JSON.stringify(body) },
       response: {
         ...getResponseMetadata(typedResponse),
@@ -300,7 +300,9 @@ export class OllamaCompletionLanguageModel implements LanguageModelV4 {
             }
 
             if (value.done) {
-              finishReason = "stop";
+              finishReason = value.done_reason ?? "stop";
+              usage.inputTokens.total = value.prompt_eval_count;
+              usage.outputTokens.total = value.eval_count;
             }
 
             if (value.response != null) {
@@ -346,6 +348,7 @@ const baseOllamaResponseSchema = z.object({
   created_at: z.string(),
   response: z.string(),
   done: z.boolean(),
+  done_reason: z.string().optional(),
   context: z.array(z.number()),
   error: z.unknown().optional(),
 
